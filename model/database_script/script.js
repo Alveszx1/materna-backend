@@ -1,0 +1,533 @@
+create database db_tech_bridge_materna;
+
+use db_tech_bridge_materna;
+
+#ENDERECO
+########################################################################################
+
+#CRIAÇÃO DA TABELA estado
+create table tbl_estado(
+	id 			          int                     not null primary key auto_increment,
+    sigla 		          varchar (3)             not null
+);
+
+#CRIAÇÃO DA TABELA cidade
+create table tbl_cidade(
+	id 			          int                     not null primary key auto_increment,
+    nome 		          varchar (100)           not null,
+
+    id_estado             int                     not null,
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_ESTADO_CIDADE	          # nome do relacionamento
+    foreign key			(id_estado)				      # quem sera a FK natabla FK(foren key)
+    references			tbl_estado(id)			      # de onde vem a FK
+);
+
+#criacao da tabela endereco
+create table tbl_endereco(
+    id 		             int                    not null primary key auto_increment,
+    logradouro 	         varchar(100)    	    not null,
+    cep 	             varchar(20) 	        not null,
+    bairro 	             varchar(50) 	        not null,
+    numero               varchar(10)            not null,
+    complemento 	     varchar(50) 	        not null,
+    
+    latitude             decimal(11,8)          not null,
+    longitude            decimal(11,8)          not null,
+
+    id_cidade            int not null,
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_CIDADE_ENDERECO	      # nome do relacionamento
+    foreign key			(id_cidade)				        # quem sera a FK natabla FK(foren key)
+    references			tbl_cidade(id)			      # de onde vem a FK
+
+);
+#########################################################################################################
+
+#CRIAÇÃO DA TABELA telefone
+create table tbl_telefone(
+	id 			        int                     not null primary key auto_increment,
+    numero 		        varchar (25)            not null
+);
+
+
+
+#DOADORA
+###########################################################################################################
+
+#CRIAÇÃO DA TABELA doadora
+create table tbl_doadora(
+	id 			        int                     not null primary key auto_increment,
+    nome 		        varchar (100)           not null,
+    cpf 		        varchar (15)            not null,
+    foto 		        varchar (255),
+    data_nascimento 	date                    not null,
+    email            	varchar(255)            not null,
+    senha               varchar(255)            not null,
+    sal                 varchar(255)            not null,
+
+    id_endereco         int                     not null,
+    id_telefone         int                     not null,
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_ENDERECO_DOADORA          # nome do relacionamento
+    foreign key			(id_endereco)				  # quem sera a FK natabla FK(foren key)
+    references			tbl_endereco(id),			  # de onde vem a FK
+
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_TELEFONE_DOADORA	          # nome do relacionamento
+    foreign key			(id_telefone)				  # quem sera a FK natabla FK(foren key)
+    references			tbl_telefone(id)			  # de onde vem a FK
+
+);
+
+################################################################################################################
+
+
+
+#FUNCIONARIO
+######################################################################################################################
+
+
+
+
+
+######################################################################################################################
+
+
+
+#INSTITUICAO
+###################################################################################################################
+
+#CRIAÇÃO DA TABELA tipo coleta
+create table tbl_tipo_coleta(
+	id 			int                             not null primary key auto_increment,
+    tipo 		varchar (50)                    not null
+);
+
+create table tbl_instituicao(
+	id 			        int                     not null primary key auto_increment,
+    nome 		        varchar (100)           not null,
+    cnpj 		        varchar (30)            not null,
+    email            	varchar(255)            not null,
+    foto                varchar(255)            not null,
+
+    id_coleta           int                     not null,
+    id_endereco         int                     not null,
+
+    
+    #fazer relacao entre duas tabelas 
+    constraint			FK_TIPOCOLETA_INSTITUICAO         # nome do relacionamento
+    foreign key			(id_coleta)				          # quem sera a FK natabla FK(foren key)
+    references			tbl_tipo_coleta(id),			      # de onde vem a FK
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_ENDERECO_INSTITUICAO          # nome do relacionamento
+    foreign key			(id_endereco)				     # quem sera a FK natabla FK(foren key)
+    references			tbl_endereco(id)			     # de onde vem a FK
+
+);
+
+create table tbl_horario_funcionamento(
+	id 			        int             not null primary key auto_increment,
+    dia 		        int             not null,
+    hora_inicio         time            not null,
+    hora_fim           	time            not null,
+
+
+    id_instituicao      int             not null,
+    
+    #fazer relacao entre duas tabelas 
+    constraint			FK_INSTITUICAO_HORARIO               # nome do relacionamento
+    foreign key			(id_instituicao)				     # quem sera a FK natabla FK(foren key)
+    references			tbl_instituicao(id)			          # de onde vem a FK
+
+);
+
+
+
+create table tbl_telefone_instituicao(
+	id 			        int             not null primary key auto_increment,
+
+    id_instituicao      int             not null,
+    id_telefone         int             not null,
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_INSTITUICAO_TELEFONE       # nome do relacionamento
+    foreign key			(id_instituicao)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_instituicao(id),		  # de onde vem a FK
+
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_TELEFONE_INSTITUICAO       # nome do relacionamento
+    foreign key			(id_telefone)				  # quem sera a FK natabla FK(foren key)
+    references			tbl_telefone(id)			  # de onde vem a FK
+
+); 
+
+##########################################################################################################################################
+#CRIAÇÃO DA TABELA funcionario
+create table tbl_funcionario(
+	id 			        int                     not null primary key auto_increment,
+    nome 		        varchar (100)           not null,
+    cpf 		        varchar (15)            not null,
+    data_nascimento 	date                    not null,
+    email            	varchar(255)            not null,
+    adm                 boolean                 not null,
+    senha               varchar(255)            not null,
+    sal                 varchar(255)            not null,
+
+    id_telefone         int                     not null,
+    id_instituicao      int                     not null,
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_TELEFONE_FUNCIONARIO	          # nome do relacionamento
+    foreign key			(id_telefone)				      # quem sera a FK natabla FK(foren key)
+    references			tbl_telefone(id),                 # de onde vem a FK
+
+
+
+    #fazer relacao entre duas tabelas 
+    constraint          FK_INSTITUICAO_FUNCIONARIO    # nome do relacionamento
+    foreign key         (id_instituicao)              # quem sera a FK na tabela
+    references          tbl_instituicao(id)           # de onde vem a FK
+
+);
+
+#############################################################################################################################
+
+#CRIAÇÃO DA TABELA campanha
+create table tbl_campanha(
+	id 			    int                     not null primary key auto_increment,
+    titulo 		    varchar(100)             not null,
+    descricao       text                    not null,
+    foto            varchar(255)            not null,
+    data_inicio     date                    not null,
+    data_fim        date                    not null,
+    is_ativo        boolean                 not null,
+
+    id_instituicao  int                     not null,
+    id_funcionario  int                     not null,
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_INSTITUICAO_CAMPANHA       # nome do relacionamento
+    foreign key			(id_instituicao)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_instituicao(id),		  # de onde vem a FK
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_FUNCIONARIO_CAMPANHA       # nome do relacionamento
+    foreign key			(id_funcionario)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_funcionario(id)		      # de onde vem a FK
+
+
+);
+
+#####################################################################################################
+#####################################################
+#################################################
+########################################
+#CRIAÇÃO DA TABELA jornada
+create table tbl_jornada(
+	id 			            int                         not null primary key auto_increment,
+    is_ativo 	            boolean                     not null,
+    nome                    varchar(50)                 not null,
+    descricao	            text,	
+    
+    id_instituicao		    int				            not null,
+    
+    #fazer relacao entre duas tabelas 
+    constraint			FK_INSTITUICAO_JORNADA        # nome do relacionamento
+    foreign key			(id_instituicao)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_instituicao(id)		      # de onde vem a FK
+    
+);
+
+
+
+
+#CRIAÇÃO DA TABELA etapa
+create table tbl_etapa(
+	id 			            int                     not null primary key auto_increment,
+    titulo 		            varchar(100)            not null,
+    descricao               text                    not null,
+    ordem   
+                    int             not null,                -- posição na jornada
+    is_repetivel            boolean         not null default false,  -- true na última etapa
+    is_agendavel            boolean                 not null,
+    is_obrigatorio          boolean                 not null,
+    is_solicita_arquivo     boolean                 not null,
+    is_precisa_aprovacao    boolean                 not null,
+
+    id_jornada              int                     not null,
+
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_JORNADA_ETAPA          # nome do relacionamento
+    foreign key			(id_jornada)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_jornada(id)		      # de onde vem a FK
+
+);
+
+
+
+#CRIAÇÃO DA TABELA ciclo
+create table tbl_ciclo(
+	id 			          int                      not null primary key auto_increment,
+    numero_ciclo          int                      not null,
+    is_concluido	      boolean                  not null,
+
+    id_jornada            int                      not null,
+    id_doadora            int                      not null,
+
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_JORNADA_CICLO          # nome do relacionamento
+    foreign key			(id_jornada)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_jornada(id),		  # de onde vem a FK
+
+
+	#fazer relacao entre duas tabelas 
+    constraint			FK_DOADORA_CICLO       # nome do relacionamento
+    foreign key			(id_doadora)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_doadora(id)		  # de onde vem a FK
+);
+
+
+#CRIAÇÃO DA TABELA etapa ciclo
+create table tbl_etapa_ciclo(
+	id 			        int                     not null primary key auto_increment,
+    data_conclusao 		date                    null,
+    
+    id_etapa            int                     not null,
+    id_ciclo            int                     not null,
+
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_ETAPA_ETAPACICLO       # nome do relacionamento
+    foreign key			(id_etapa)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_etapa(id),		  # de onde vem a FK
+
+
+	#fazer relacao entre duas tabelas 
+    constraint			FK_CICLO_ETAPACICLO       # nome do relacionamento
+    foreign key			(id_ciclo)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_ciclo(id)		  # de onde vem a FK
+);
+
+
+##############
+
+
+#CRIAÇÃO DA TABELA cadastro horario
+create table tbl_cadastro_horario(
+	id 			    int                     not null primary key auto_increment,
+    dia 		    date                    not null,
+    horario         time                    not null,
+
+    id_etapa  		int                     not null,
+
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_ETAPA_CADASTROHORARIO       # nome do relacionamento
+    foreign key			(id_etapa)    		                # quem sera a FK natabla FK(foren key)
+    references			tbl_etapa(id)		                # de onde vem a FK
+);
+
+
+#CRIAÇÃO DA TABELA statu agendamento
+create table tbl_status_agendamento(
+	id 			    int                     not null primary key auto_increment,
+    status 		    varchar (25)            not null
+);
+
+
+#CRIAÇÃO DA TABELA agendamento
+create table tbl_agendamento(
+	id 			    int                     not null primary key auto_increment,
+  
+    
+	id_ciclo  						  int                     not null,
+    id_cadastro_horario				  int                     not null,
+    id_status_agendamento			  int                     not null,
+
+
+
+	#fazer relacao entre duas tabelas 
+    constraint			FK_CICLO_AGENDAMENTO      # nome do relacionamento
+    foreign key			(id_ciclo)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_ciclo(id),		  # de onde vem a FK
+    
+    #fazer relacao entre duas tabelas 
+    constraint			FK_CADASTROHORARIO_AGENDAMENTO      # nome do relacionamento
+    foreign key			(id_cadastro_horario)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_cadastro_horario(id),		  # de onde vem a FK
+    
+    #fazer relacao entre duas tabelas 
+    constraint			FK_STATUSAGENDAMENTO_AGENDAMENTO      # nome do relacionamento
+    foreign key			(id_status_agendamento)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_status_agendamento(id)		  # de onde vem a FK
+    
+    
+);
+
+
+
+#CRIAÇÃO DA TABELA documento instituicao
+create table tbl_documento_instituicao(
+	id 			    int                     not null primary key auto_increment,
+    documento		varchar(255)            not null,
+
+    id_etapa        int                     not null,
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_ETAPA_DOCUMENTOINSTITUICAO       # nome do relacionamento
+    foreign key			(id_etapa)    		                # quem sera a FK natabla FK(foren key)
+    references			tbl_etapa(id)		                # de onde vem a FK
+
+);
+
+
+
+#CRIAÇÃO DA TABELA documento doadora
+create table tbl_documento_doadora(
+	id 			            int                     not null primary key auto_increment,
+    documento		        varchar(255)             not null,
+    motivo_recusa		    varchar(255)             not null,
+    
+    id_etapa_ciclo          int                     not null,
+    id_doadora              int                     not null,
+
+
+
+    #fazer relacao entre duas tabelas 
+    constraint			FK_ETAPACICLO_DOCUMENTODOADORA       # nome do relacionamento
+    foreign key			(id_etapa_ciclo)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_etapa_ciclo(id),		  # de onde vem a FK
+    
+     #fazer relacao entre duas tabelas 
+    constraint			FK_DOADORA_DOCUMENTODOADORA       # nome do relacionamento
+    foreign key			(id_doadora)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_doadora(id)		  # de onde vem a FK
+
+);
+
+
+
+
+
+# CADASTRA DOADORA
+
+DROP PROCEDURE IF EXISTS proccadastrardoadora;
+
+DELIMITER $$
+
+CREATE PROCEDURE proccadastrardoadora (
+    # Doadora
+    IN p_nome             VARCHAR(100),
+    IN p_cpf              VARCHAR(15),
+    IN p_foto             VARCHAR(255),
+    IN p_data_nascimento  DATE,
+    IN p_email            VARCHAR(255),
+    IN p_senha            VARCHAR(255),
+    IN p_sal              VARCHAR(255),
+
+    # Telefone
+    IN p_telefone         VARCHAR(25),
+
+    # Endereço
+    IN p_logradouro       VARCHAR(100),
+    IN p_cep              VARCHAR(20),
+    IN p_bairro           VARCHAR(50),
+    IN p_numero           VARCHAR(10),
+    IN p_complemento      VARCHAR(50),
+    IN p_latitude         DECIMAL(11,8),
+    IN p_longitude        DECIMAL(11,8),
+
+    # Cidade e Estado
+    IN p_cidade           VARCHAR(100),
+    IN p_sigla_estado     VARCHAR(3)
+)
+BEGIN
+    DECLARE v_id_estado    INT;
+    DECLARE v_id_cidade    INT;
+    DECLARE v_id_endereco  INT;
+    DECLARE v_id_telefone  INT;
+
+    # Se qualquer erro acontecer, desfaz tudo
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    #  ESTADO: reaproveita se já existir, senão cria
+    SELECT id INTO v_id_estado
+    FROM tbl_estado
+    WHERE sigla = p_sigla_estado
+    LIMIT 1;
+
+    IF v_id_estado IS NULL THEN
+        INSERT INTO tbl_estado (sigla) VALUES (p_sigla_estado);
+        SET v_id_estado = LAST_INSERT_ID();
+    END IF;
+
+    # CIDADE: reaproveita se já existir naquele estado, senão cria
+    SELECT id INTO v_id_cidade
+    FROM tbl_cidade
+    WHERE nome = p_cidade
+      AND id_estado = v_id_estado
+    LIMIT 1;
+
+    IF v_id_cidade IS NULL THEN
+        INSERT INTO tbl_cidade (nome, id_estado)
+        VALUES (p_cidade, v_id_estado);
+        SET v_id_cidade = LAST_INSERT_ID();
+    END IF;
+
+    # ENDEREÇO
+    INSERT INTO tbl_endereco
+        (logradouro, cep, bairro, numero, complemento, latitude, longitude, id_cidade)
+    VALUES
+        (p_logradouro, p_cep, p_bairro, p_numero, p_complemento, p_latitude, p_longitude, v_id_cidade);
+    SET v_id_endereco = LAST_INSERT_ID();
+
+    # TELEFONE
+    INSERT INTO tbl_telefone (numero) VALUES (p_telefone);
+    SET v_id_telefone = LAST_INSERT_ID();
+
+    # DOADORA
+    INSERT INTO tbl_doadora
+        (nome, cpf, foto, data_nascimento, email, senha, sal, id_endereco, id_telefone)
+    VALUES
+        (p_nome, p_cpf, p_foto, p_data_nascimento, p_email, p_senha, p_sal, v_id_endereco, v_id_telefone);
+
+    COMMIT;
+END$$
+
+DELIMITER ;
+
+
+CALL proccadastrardoadora(
+    'Maria da Silva',
+    '123.456.789-00',
+    NULL,
+    '1995-04-20',
+    'maria@email.com',
+    'hash_da_senha',
+    'sal_aleatorio',
+    '(11) 91234-5678',
+    'Rua das Flores',
+    '01234-567',
+    'Centro',
+    '100',
+    'Apto 12',
+    -23.55052000,
+    -46.63330800,
+    'São Paulo',
+    'SP'
+);
