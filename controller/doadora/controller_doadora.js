@@ -122,7 +122,8 @@ const inserirNovaDoadora = async function (doadora, contentType) {
                 if (result) {
 
                     doadora.id = result
-
+                    
+                    delete doadora.sal
                     delete doadora.senha
 
                     customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_CREATED_ITEM.status

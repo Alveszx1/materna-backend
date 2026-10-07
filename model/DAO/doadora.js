@@ -21,7 +21,9 @@ const knexConection = knex(knexDatabaseConfig.development);
 // Função para inserir uma nova doadora no banco de dados
 const insertDoadora = async function (doadora) {
 
-    const sql = `
+    try {
+
+        const sql = `
         CALL proccadastrardoadora(
             ?, ?, ?, ?, ?, ?, ?,
             ?,
@@ -56,6 +58,12 @@ const insertDoadora = async function (doadora) {
     const [resultado] = await knexConection.raw(sql, valores);
 
     return resultado[0][0].id_doadora;
+        
+    } catch (error) {
+        console.error('Erro ao inserir doadora:', error)
+        return false
+    }
+    
 };
 
 module.exports = {
