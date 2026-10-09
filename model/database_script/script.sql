@@ -455,6 +455,7 @@ BEGIN
     DECLARE v_id_cidade    INT;
     DECLARE v_id_endereco  INT;
     DECLARE v_id_telefone  INT;
+    DECLARE v_id_doadora   INT;   -- NOVO: guarda o id da doadora para devolver no final
 
     # Se qualquer erro acontecer, desfaz tudo
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -505,29 +506,163 @@ BEGIN
         (nome, cpf, foto, data_nascimento, email, senha, sal, id_endereco, id_telefone)
     VALUES
         (p_nome, p_cpf, p_foto, p_data_nascimento, p_email, p_senha, p_sal, v_id_endereco, v_id_telefone);
+    SET v_id_doadora = LAST_INSERT_ID();   -- NOVO
 
     COMMIT;
+
+    # NOVO: devolve o id para o DAO (resultado[0][0].id_doadora)
+    SELECT v_id_doadora AS id_doadora;
 END$$
 
 DELIMITER ;
 
 
-CALL proccadastrardoadora(
-    'Maria da Silva',
-    '123.456.789-00',
-    NULL,
-    '1995-04-20',
-    'maria@email.com',
-    'hash_da_senha',
-    'sal_aleatorio',
-    '(11) 91234-5678',
-    'Rua das Flores',
-    '01234-567',
-    'Centro',
-    '100',
-    'Apto 12',
-    -23.55052000,
-    -46.63330800,
-    'São Paulo',
-    'SP'
-);
+# Teste (cria uma doadora de verdade, rode só quando quiser testar):
+# CALL proccadastrardoadora(
+#     'Maria da Silva', '529.982.247-25', NULL, '1995-04-20', 'maria@email.com',
+#     'hash_da_senha', 'sal_aleatorio', '(11) 91234-5678',
+#     'Rua das Flores', '01234-567', 'Centro', '100', 'Apto 12',
+#     -23.55052000, -46.63330800, 'São Paulo', 'SP'
+# );
+
+
+
+
+
+
+DROP PROCEDURE IF EXISTS proccadastrarfuncionario;
+
+DELIMITER $$
+
+CREATE PROCEDURE proccadastrarfuncionario (
+    -- Funcionário
+    IN p_nome             VARCHAR(100),
+    IN p_cpf              VARCHAR(15),
+    IN p_data_nascimento  DATE,
+    IN p_email            VARCHAR(255),
+    IN p_adm              BOOLEAN,
+    IN p_senha            VARCHAR(255),
+    IN p_sal              VARCHAR(255),
+
+    -- Telefone
+    IN p_telefone         VARCHAR(25),
+
+    -- Instituição onde trabalha
+    IN p_id_instituicao   INT
+)
+BEGIN
+    DECLARE v_id_telefone INT;
+    DECLARE v_id_funcionario INT;
+
+    -- Se qualquer erro acontecer, desfaz tudo
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- TELEFONE
+    INSERT INTO tbl_telefone (numero)
+    VALUES (p_telefone);
+
+    SET v_id_telefone = LAST_INSERT_ID();
+
+    -- FUNCIONÁRIO
+    INSERT INTO tbl_funcionario (
+        nome,
+        cpf,
+        data_nascimento,
+        email,
+        adm,
+        senha,
+        sal,
+        id_telefone,
+        id_instituicao
+    )
+    VALUES (
+        p_nome,
+        p_cpf,
+        p_data_nascimento,
+        p_email,
+        p_adm,
+        p_senha,
+        p_sal,
+        v_id_telefone,
+        p_id_instituicao
+    );
+
+    SET v_id_funcionario = LAST_INSERT_ID();
+
+    COMMIT;
+
+    -- Retorna o ID para o DAO, igual à procedure da doadora
+    SELECT v_id_funcionario AS id_funcionario;
+
+END$$
+
+DELIMITER ;
+
+select * from tbl_funcionario;
+
+
+select func.id, func.nome, func.cpf, func.data_nascimento, func.email, func.senha, tel.numero from 
+	tbl_funcionario as func
+    inner join tbl_telefone tel
+    on func.id_telefone = tel.id
+    where func.id = 5
+
+
+
+# CADASTRA CAMPANHA
+
+DROP PROCEDURE IF EXISTS proccadastrarcampanha;
+
+DELIMITER $$
+
+CREATE PROCEDURE proccadastrarcampanha (
+    # Campanha
+    IN p_titulo           VARCHAR(100),
+    IN p_descricao        TEXT,
+    IN p_foto             VARCHAR(255),
+    IN p_data_inicio      DATE,
+    IN p_data_fim         DATE,
+    IN p_is_ativo         BOOLEAN,
+
+    # Relacionamentos
+    IN p_id_instituicao   INT,
+    IN p_id_funcionario   INT
+)
+BEGIN
+    DECLARE v_id_campanha INT;
+
+    # Se qualquer erro acontecer, desfaz tudo
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    # CAMPANHA
+    INSERT INTO tbl_campanha
+        (titulo, descricao, foto, data_inicio, data_fim,
+         is_ativo, id_instituicao, id_funcionario)
+    VALUES
+        (p_titulo, p_descricao, p_foto, p_data_inicio, p_data_fim,
+         p_is_ativo, p_id_instituicao, p_id_funcionario);
+
+    SET v_id_campanha = LAST_INSERT_ID();
+
+    COMMIT;
+
+    # Devolve o ID para o DAO
+    SELECT v_id_campanha AS id_campanha;
+
+END$$
+
+DELIMITER ;
+
+select * from tbl_doadora

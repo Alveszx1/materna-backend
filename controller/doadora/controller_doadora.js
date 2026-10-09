@@ -12,6 +12,8 @@ const doadoraDAO = require("../../model/DAO/doadora.js")
 
 const coordenadas = require("../module/coordenadas.js")
 
+const bcrypt = require("bcrypt")
+
 const validarDados = async function (doadora) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
@@ -117,7 +119,11 @@ const inserirNovaDoadora = async function (doadora, contentType) {
                     return customMessage.ERROR_BAD_REQUEST
                 }
 
+                doadora.senha = await bcrypt.hash(doadora.senha, 10)
+                
+
                 let result = await doadoraDAO.insertDoadora(await tratarDados(doadora))
+
 
                 if (result) {
 
@@ -264,7 +270,7 @@ const buscarNomeDoadora = async function (nome) {
     }
 }
 
-const buscarDoadora = async function (id) {
+const buscarDoadoraById = async function (id) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
     try {
@@ -335,7 +341,6 @@ const tratarDados = async function (doadora) {
     doadora.nome = doadora.nome.replaceAll("'", "")
     doadora.foto = doadora.foto ? doadora.foto.replaceAll("'", "") : null
     doadora.email = doadora.email.replaceAll("'", "")
-    doadora.senha = doadora.senha.replaceAll("'", "")
     doadora.cidade = doadora.cidade.replaceAll("'", "")
     doadora.logradouro = doadora.logradouro.replaceAll("'", "")
     doadora.bairro = doadora.bairro.replaceAll("'", "")
@@ -349,7 +354,7 @@ module.exports = {
     inserirNovaDoadora,
     atualizarDoadora,
     listarDoadora,
-    buscarDoadora,
+    buscarDoadoraById,
     buscarNomeDoadora,
     excluirDoadora
 }
