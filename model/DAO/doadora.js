@@ -19,52 +19,52 @@ const knexConection = knex(knexDatabaseConfig.development);
 
 
 // Função para inserir uma nova doadora no banco de dados
-const insertDoadora = async function (doadora) {
+    const insertDoadora = async function (doadora) {
 
-    try {
+        try {
 
-        const sql = `
-        CALL proccadastrardoadora(
-            ?, ?, ?, ?, ?, ?, ?,
-            ?,
-            ?, ?, ?, ?, ?, ?, ?,
-            ?, ?
-        )
-    `;
+            const sql = `
+            CALL proccadastrardoadora(
+                ?, ?, ?, ?, ?, ?, ?,
+                ?,
+                ?, ?, ?, ?, ?, ?, ?,
+                ?, ?
+            )
+        `;
 
-    const valores = [
-        doadora.nome,
-        doadora.cpf,
-        doadora.foto ?? null,
-        doadora.data_nascimento,
-        doadora.email,
-        doadora.senha,
-        doadora.sal,
+        const valores = [
+            doadora.nome,
+            doadora.cpf,
+            doadora.foto ?? null,
+            doadora.data_nascimento,
+            doadora.email,
+            doadora.senha,
+            doadora.sal,
 
-        doadora.telefone,
+            doadora.telefone,
 
-        doadora.logradouro,
-        doadora.cep,
-        doadora.bairro,
-        doadora.numero,
-        doadora.complemento,
-        doadora.latitude,
-        doadora.longitude,
+            doadora.logradouro,
+            doadora.cep,
+            doadora.bairro,
+            doadora.numero,
+            doadora.complemento,
+            doadora.latitude,
+            doadora.longitude,
 
-        doadora.cidade,
-        doadora.sigla_estado
-    ];
+            doadora.cidade,
+            doadora.sigla_estado
+        ];
 
-    const [resultado] = await knexConection.raw(sql, valores);
+        const [resultado] = await knexConection.raw(sql, valores);
 
-    return resultado[0][0].id_doadora;
+        return resultado[0][0].id_doadora;
+            
+        } catch (error) {
+            console.error('Erro ao inserir doadora:', error)
+            return false
+        }
         
-    } catch (error) {
-        console.error('Erro ao inserir doadora:', error)
-        return false
-    }
-    
-};
+    };
 
 module.exports = {
     insertDoadora
