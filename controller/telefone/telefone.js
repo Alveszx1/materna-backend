@@ -64,8 +64,6 @@ const inserirTelefone = async function(telefone, contentType){
 
 }
 
-
-// Função interna (não exportada): só serve para checar se o telefone existe
 const buscarTelefone = async function(id) {
 
     let customMessage = JSON.parse(JSON.stringify(configMessages))
