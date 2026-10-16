@@ -12,6 +12,7 @@ const corsOptions = {
 const doadoraRouter = require("./routes/doadora.router.js")
 const funcionarioRouter = require("./routes/funcionario.router.js")
 const campanhaRouter = require("./routes/campanha.router.js")
+const instituicaoRouter = require("./routes/instituicao.router.js")
 
 
 app.use(cors(corsOptions))
@@ -20,6 +21,7 @@ app.use(cors(corsOptions))
 app.use("/v1/materna/doadora", doadoraRouter)
 app.use("/v1/materna/funcionario", funcionarioRouter )
 app.use("/v1/materna/campanha", campanhaRouter)
+app.use("/v1/materna/instituicao", instituicaoRouter)
 
 app.listen(9090, function(){
     console.log("API aguardando novas requisições..............")

@@ -118,6 +118,7 @@ const updateFuncionario = async function (funcionario) {
             return false
         }
     } catch (error) {
+        console.log(error)
         return false
     }
 }
@@ -130,7 +131,7 @@ const deleteFuncionario = async function(id){
         if (resultBuscarTelefone && resultBuscarTelefone[0] && resultBuscarTelefone[0].length > 0) {
             let idTelefone = resultBuscarTelefone[0][0].id_telefone
 
-            let sqlDeleteFuncionario = ` DELETEFROM tbl_funcionario WHERE id=${id};`
+            let sqlDeleteFuncionario = ` DELETE FROM tbl_funcionario WHERE id=${id};`
             let resultDeleteFuncionario = await knexConection.raw(sqlDeleteFuncionario)
 
             if (resultDeleteFuncionario) {
@@ -148,6 +149,7 @@ const deleteFuncionario = async function(id){
             return false
         }
     } catch (error) {
+        console.log(error)
         return false
     }
 }
