@@ -11,6 +11,20 @@ const bodyParserJson = bodyParser.json()
 // Import da controller da doadora
 const controllerInstituicao = require('../controller/instituicao/controller_instituicao.js')
 
+router.get('/', async function(request, response) {
+    let result = await controllerInstituicao.listarInstituicao()
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
+router.get('/:id', async function(request, response) {
+    let id = request.params.id
+    let result = await controllerInstituicao.buscarInstituicaoById(id)
+
+    response.status(result.status_code)
+    response.json(result)
+})
 
 router.post('/', bodyParserJson, async function(request, response) {
     let dados = request.body

@@ -65,10 +65,6 @@ const validarDados = async function (funcionario) {
         customMessage.ERROR_BAD_REQUEST.field = "[SENHA] INVÁLIDA"
         return customMessage.ERROR_BAD_REQUEST
  
-    } else if (funcionario.sal == undefined || funcionario.sal == "" || funcionario.sal == null || funcionario.sal.length > 255) {
-        customMessage.ERROR_BAD_REQUEST.field = "[SAL] INVÁLIDO"
-        return customMessage.ERROR_BAD_REQUEST
- 
     } else if (funcionario.telefone == undefined || funcionario.telefone == "" || funcionario.telefone == null || !regexTelefone.test(funcionario.telefone)) {
         customMessage.ERROR_BAD_REQUEST.field = "[TELEFONE] INVÁLIDO (somente números, com DDD)"
         return customMessage.ERROR_BAD_REQUEST
@@ -95,7 +91,8 @@ const insertFuncionario = async function(funcionario, contentType){
             let validarDadosFuncionario = await validarDados(funcionario)
             if(!validarDadosFuncionario){
                             
-                funcionario.senha = await bycript.hash(funcionario.senha, 10)
+                funcionario.sal = await bycript.genSalt(10)
+                funcionario.senha = await bycript.hash(funcionario.senha, funcionario.sal)
 
                 let result = await funcionarioDAO.insertFuncionario(await tratarDados(funcionario))
                 if(result){
@@ -144,6 +141,7 @@ const listarFuncionario = async function () {
             if (result.length > 0) {
                 for (let funcionario of result) {
                     delete funcionario.senha
+                    delete funcionario.sal
                 }
 
                 customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
@@ -164,6 +162,42 @@ const listarFuncionario = async function () {
     }
 }
 
+const buscarFuncionarioPorInstituicao = async function (idInstituicao) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (idInstituicao == undefined || idInstituicao == "" || idInstituicao == null || isNaN(idInstituicao) || idInstituicao < 1) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_INSTITUICAO] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await funcionarioDAO.selectFuncionariosByInstituicao(idInstituicao)
+
+        if (result) {
+            if (result.length > 0) {
+                for (let funcionario of result) {
+                    delete funcionario.senha
+                    delete funcionario.sal
+                }
+
+                customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+                customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+                customMessage.DEFAULT_MESSAGE.count = result.length
+                customMessage.DEFAULT_MESSAGE.response.funcionario = result
+
+                return customMessage.DEFAULT_MESSAGE
+            }
+
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        return customMessage.ERROR_INTERNAL_SERVER_MODEL_FUNCIONARIO
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const buscarFuncionarioById = async function (id) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
@@ -178,6 +212,7 @@ const buscarFuncionarioById = async function (id) {
                 if (result.length > 0) {
                     for (let funcionario of result) {
                         delete funcionario.senha
+                        delete funcionario.sal
                     }
 
                     customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
@@ -214,15 +249,15 @@ const atualizarFuncionario = async function (funcionario, id, contentType) {
                     funcionario.id = Number(id)
                     funcionario.id_telefone = funcionarioAtual.id_telefone
 
-                    if (funcionario.senha == undefined || funcionario.senha == "" || funcionario.senha == null) {
-                        funcionario.senha = funcionarioAtual.senha
-                    } else {
-                        funcionario.senha = await bycript.hash(funcionario.senha, 10)
-                    }
+                    funcionario.sal = await bycript.genSalt(10)
+                    funcionario.senha = await bycript.hash(funcionario.senha, funcionario.sal)
 
                     let result = await funcionarioDAO.updateFuncionario(await tratarDados(funcionario))
 
                     if (result) {
+                        delete funcionario.senha
+                        delete funcionario.sal
+
                         customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
                         customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
                         customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_UPDATE_ITEM.message
@@ -257,7 +292,12 @@ const deletarFuncionario = async function (id) {
             let result = await funcionarioDAO.deleteFuncionario(id)
 
             if (result) {
-                return customMessage.SUCCESS_DELETED_ITEM
+                customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_DELETED_ITEM.status
+                customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_DELETED_ITEM.status_code
+                customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_DELETED_ITEM.message
+                customMessage.DEFAULT_MESSAGE.response = result
+
+                return customMessage.DEFAULT_MESSAGE
             } else {
                 return customMessage.ERROR_INTERNAL_SERVER_MODEL_FUNCIONARIO
             }
@@ -287,6 +327,7 @@ const tratarDados = async function (funcionario) {
 module.exports = {
     insertFuncionario,
     listarFuncionario,
+    buscarFuncionarioPorInstituicao,
     buscarFuncionarioById,
     atualizarFuncionario,
     deletarFuncionario

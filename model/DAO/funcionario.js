@@ -70,6 +70,24 @@ const selectAllFuncionarios = async function () {
     }
 }
 
+const selectFuncionariosByInstituicao = async function (idInstituicao) {
+    try {
+        const sql = `
+            select func.*, tel.numero as telefone
+            from tbl_funcionario as func
+            inner join tbl_telefone as tel on func.id_telefone = tel.id
+            where func.id_instituicao = ${idInstituicao}
+            order by func.id desc
+        `
+
+        const resultado = await knexConection.raw(sql)
+        return resultado[0]
+    } catch (error) {
+        console.error('Erro ao buscar funcionários por instituição:', error)
+        return false
+    }
+}
+
 const selectByIdFuncionario = async function (id) {
     try {
         let sql = `
@@ -157,6 +175,7 @@ const deleteFuncionario = async function(id){
 module.exports = {
     insertFuncionario,
     selectAllFuncionarios,
+    selectFuncionariosByInstituicao,
     selectByIdFuncionario,
     updateFuncionario,
     deleteFuncionario

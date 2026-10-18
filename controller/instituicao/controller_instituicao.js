@@ -203,6 +203,64 @@ const inserirNovaInstituicao = async function (instituicao, contentType) {
     }
 }
 
+const listarInstituicao = async function () {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        let result = await instituicaoDAO.selectAllInstituicoes()
+
+        if (result) {
+            if (result.length > 0) {
+                customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+                customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+                customMessage.DEFAULT_MESSAGE.count = result.length
+                customMessage.DEFAULT_MESSAGE.response.instituicao = result
+
+                return customMessage.DEFAULT_MESSAGE
+            } else {
+                return customMessage.ERROR_NOT_FOUND
+            }
+        } else {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_INSTITUICAO
+        }
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
+const buscarInstituicaoById = async function (id) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (id == undefined || id == "" || id == null || isNaN(id) || id < 1) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await instituicaoDAO.selectByIdInstituicao(id)
+
+        if (result) {
+            if (result.length > 0) {
+                customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+                customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+                customMessage.DEFAULT_MESSAGE.response.instituicao = result
+
+                return customMessage.DEFAULT_MESSAGE
+            }
+
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        return customMessage.ERROR_INTERNAL_SERVER_MODEL_INSTITUICAO
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 module.exports = {
-    inserirNovaInstituicao
+    inserirNovaInstituicao,
+    listarInstituicao,
+    buscarInstituicaoById
 }

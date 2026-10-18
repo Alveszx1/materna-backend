@@ -27,6 +27,14 @@ router.get('/', async function (request, response) {
     response.json(result)
 })
 
+router.get('/instituicao/:id', async function (request, response) {
+    let idInstituicao = request.params.id
+    let result = await controllerFuncionario.buscarFuncionarioPorInstituicao(idInstituicao)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.get('/:id', async function (request, response) {
     let id = request.params.id
     let result = await controllerFuncionario.buscarFuncionarioById(id)

@@ -53,10 +53,6 @@ const validarDados = async function (doadora) {
         customMessage.ERROR_BAD_REQUEST.field = "[SENHA] INVÁLIDA"
         return customMessage.ERROR_BAD_REQUEST
 
-    } else if (doadora.sal == undefined || doadora.sal == "" || doadora.sal == null || doadora.sal.length > 255) {
-        customMessage.ERROR_BAD_REQUEST.field = "[SAL] INVÁLIDO"
-        return customMessage.ERROR_BAD_REQUEST
-
     } else if (doadora.telefone == undefined || doadora.telefone == "" || doadora.telefone == null || !regexTelefone.test(doadora.telefone)) {
         customMessage.ERROR_BAD_REQUEST.field = "[TELEFONE] INVÁLIDO (somente números, com DDD)"
         return customMessage.ERROR_BAD_REQUEST
@@ -119,7 +115,8 @@ const inserirNovaDoadora = async function (doadora, contentType) {
                     return customMessage.ERROR_BAD_REQUEST
                 }
 
-                doadora.senha = await bcrypt.hash(doadora.senha, 10)
+                doadora.sal = await bcrypt.genSalt(10)
+                doadora.senha = await bcrypt.hash(doadora.senha, doadora.sal)
                 
 
                 let result = await doadoraDAO.insertDoadora(await tratarDados(doadora))
@@ -165,6 +162,7 @@ const listarDoadora = async function () {
                 // Remove a senha de todas as doadoras antes de retornar
                 for (let doadora of result) {
                     delete doadora.senha
+                    delete doadora.sal
                 }
 
                 customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
@@ -193,22 +191,34 @@ const atualizarDoadora = async function (doadora, id, contentType) {
 
         if (String(contentType).toUpperCase() == "APPLICATION/JSON") {
 
-            let resultBuscarDoadora = await buscarDoadora(id)
+            let resultBuscarDoadora = await buscarDoadoraById(id)
 
             if (resultBuscarDoadora.status) {
                 let validar = await validarDados(doadora)
 
                 if (!validar) {
+                    let resultCoordenadas = await coordenadas.definirLatitudeLongitudePorCEP(doadora.cep)
+
+                    if (!resultCoordenadas) {
+                        customMessage.ERROR_BAD_REQUEST.field = "[CEP] NÃO FOI POSSÍVEL LOCALIZAR AS COORDENADAS"
+                        return customMessage.ERROR_BAD_REQUEST
+                    }
+
+                    doadora.latitude = Number(resultCoordenadas.latitude)
+                    doadora.longitude = Number(resultCoordenadas.longitude)
                     doadora.id = Number(id)
+                    doadora.sal = await bcrypt.genSalt(10)
+                    doadora.senha = await bcrypt.hash(doadora.senha, doadora.sal)
                     let result = await doadoraDAO.updateDoadora(await tratarDados(doadora))
 
                     if (result) {
 
                         delete doadora.senha
+                        delete doadora.sal
 
-                        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCESS_UPDATE_ITEM.status
-                        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCESS_UPDATE_ITEM.status_code
-                        customMessage.DEFAULT_MESSAGE.message = customMessage.SUCESS_UPDATE_ITEM.message
+                        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+                        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+                        customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_UPDATE_ITEM.message
                         customMessage.DEFAULT_MESSAGE.response = doadora
 
                         return customMessage.DEFAULT_MESSAGE
@@ -249,6 +259,7 @@ const buscarNomeDoadora = async function (nome) {
 
                     for (let doadora of result) {
                         delete doadora.senha
+                        delete doadora.sal
                     }
 
                     customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
@@ -288,6 +299,7 @@ const buscarDoadoraById = async function (id) {
 
                     for (let doadora of result) {
                         delete doadora.senha
+                        delete doadora.sal
                     }
 
                     customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
