@@ -72,6 +72,58 @@ const insertInstituicao = async function (instituicao) {
     }
 }
 
+
+const updateInstituicao = async function (id, instituicao) {
+
+    try {
+
+        const sql = `
+            CALL procatualizarinstituicao(
+                ?,
+                ?, ?, ?, ?, ?,
+                ?,
+                ?, ?, ?, ?, ?, ?, ?,
+                ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?
+            )
+        `
+
+        const valores = [
+            id,
+            instituicao.nome,
+            instituicao.cnpj,
+            instituicao.email,
+            instituicao.foto ?? null,
+            instituicao.id_coleta,
+            instituicao.telefone,
+            instituicao.logradouro,
+            instituicao.cep,
+            instituicao.bairro,
+            instituicao.numero,
+            instituicao.complemento,
+            instituicao.latitude,
+            instituicao.longitude,
+            instituicao.cidade,
+            instituicao.sigla_estado,
+            ...instituicao.horarios.flatMap(h => [h.dia, h.abre, h.fecha])
+        ]
+
+        await knexConection.raw(sql, valores)
+        return true
+
+    } catch (error) {
+        console.error('Erro ao atualizar instituição:', error)
+        return false
+    }
+}
+
+
 const selectAllInstituicoes = async function () {
     try {
         let sql = `
@@ -134,6 +186,7 @@ const selectByIdInstituicao = async function (id) {
 
 module.exports = {
     insertInstituicao,
+    updateInstituicao,
     selectAllInstituicoes,
     selectByIdInstituicao
 }

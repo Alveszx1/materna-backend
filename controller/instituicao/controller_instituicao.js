@@ -4,7 +4,7 @@ const coordenadas = require("../module/coordenadas.js")
 const bcrypt = require("bcrypt")
 
 
-const validarDados = async function (instituicao) {
+const validarDados = async function (instituicao, exigirFuncionario = true) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
     const regexCnpj = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/
@@ -88,9 +88,12 @@ const validarDados = async function (instituicao) {
         customMessage.ERROR_BAD_REQUEST.field = "[HORARIOS] HORA INVÁLIDA (formato HH:MM)"
         return customMessage.ERROR_BAD_REQUEST
 
-    } else if (!instituicao.horarios.every(h => (h.abre == "00:00" && h.fecha == "00:00") || h.abre < h.fecha)) {
+    } else if (!instituicao.horarios.every(h => (h.abre.slice(0, 5) == "00:00" && h.fecha.slice(0, 5) == "00:00") || h.abre < h.fecha)) {
         customMessage.ERROR_BAD_REQUEST.field = "[HORARIOS] ABERTURA DEVE SER ANTES DO FECHAMENTO"
         return customMessage.ERROR_BAD_REQUEST
+
+    } else if (!exigirFuncionario) {
+        return false
 
     } else if (instituicao.funcionario == undefined || instituicao.funcionario == null) {
         customMessage.ERROR_BAD_REQUEST.field = "[FUNCIONARIO] INVÁLIDO"
@@ -137,8 +140,11 @@ const tratarDados = async function (instituicao) {
     instituicao.numero = String(instituicao.numero).replaceAll("'", "")
     instituicao.complemento = instituicao.complemento ? instituicao.complemento.replaceAll("'", "") : ""
     instituicao.sigla_estado = instituicao.sigla_estado.replaceAll("'", "").toUpperCase()
-    instituicao.funcionario.nome = instituicao.funcionario.nome.replaceAll("'", "")
-    instituicao.funcionario.email = instituicao.funcionario.email.replaceAll("'", "")
+
+    if (instituicao.funcionario) {
+        instituicao.funcionario.nome = instituicao.funcionario.nome.replaceAll("'", "")
+        instituicao.funcionario.email = instituicao.funcionario.email.replaceAll("'", "")
+    }
 
     return instituicao
 }
@@ -193,6 +199,56 @@ const inserirNovaInstituicao = async function (instituicao, contentType) {
                 } else {
                     return customMessage.ERROR_INTERNAL_SERVER_MODEL
                 }
+            }
+        } else {
+            return customMessage.ERROR_CONTENT_TYPE
+        }
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
+const atualizarInstituicao = async function (instituicao, id, contentType) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (String(contentType).toUpperCase() == "APPLICATION/JSON") {
+            let resultBuscarInstituicao = await buscarInstituicaoById(id)
+
+            if (resultBuscarInstituicao.status) {
+                let validar = await validarDados(instituicao, false)
+
+                if (!validar) {
+                    let resultCoordenadas = await coordenadas.definirLatitudeLongitudePorCEP(instituicao.cep)
+
+                    if (resultCoordenadas) {
+                        instituicao.latitude = Number(resultCoordenadas.latitude)
+                        instituicao.longitude = Number(resultCoordenadas.longitude)
+                    } else {
+                        customMessage.ERROR_BAD_REQUEST.field = "[CEP] NÃO FOI POSSÍVEL LOCALIZAR AS COORDENADAS"
+                        return customMessage.ERROR_BAD_REQUEST
+                    }
+
+                    instituicao.id = Number(id)
+
+                    let result = await instituicaoDAO.updateInstituicao(Number(id), await tratarDados(instituicao))
+
+                    if (result) {
+                        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+                        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+                        customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_UPDATE_ITEM.message
+                        customMessage.DEFAULT_MESSAGE.response = instituicao
+
+                        return customMessage.DEFAULT_MESSAGE
+                    } else {
+                        return customMessage.ERROR_INTERNAL_SERVER_MODEL_INSTITUICAO
+                    }
+                } else {
+                    return validar
+                }
+            } else {
+                return resultBuscarInstituicao
             }
         } else {
             return customMessage.ERROR_CONTENT_TYPE
@@ -262,5 +318,6 @@ const buscarInstituicaoById = async function (id) {
 module.exports = {
     inserirNovaInstituicao,
     listarInstituicao,
-    buscarInstituicaoById
+    buscarInstituicaoById,
+    atualizarInstituicao
 }

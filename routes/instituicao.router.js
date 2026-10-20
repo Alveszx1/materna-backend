@@ -18,6 +18,16 @@ router.get('/', async function(request, response) {
     response.json(result)
 })
 
+router.put('/:id', bodyParserJson, async function(request, response) {
+    let id = request.params.id
+    let dados = request.body
+    let contentType = request.headers['content-type']
+    let result = await controllerInstituicao.atualizarInstituicao(dados, id, contentType)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.get('/:id', async function(request, response) {
     let id = request.params.id
     let result = await controllerInstituicao.buscarInstituicaoById(id)
