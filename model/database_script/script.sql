@@ -88,18 +88,6 @@ create table tbl_doadora(
 ################################################################################################################
 
 
-
-#FUNCIONARIO
-######################################################################################################################
-
-
-
-
-
-######################################################################################################################
-
-
-
 #INSTITUICAO
 ###################################################################################################################
 
@@ -227,9 +215,9 @@ create table tbl_campanha(
 );
 
 #####################################################################################################
-#####################################################
-#################################################
-########################################
+#tabela jornada
+#####################################################################################################
+
 #CRIAÇÃO DA TABELA jornada
 create table tbl_jornada(
 	id 			            int                         not null primary key auto_increment,
@@ -254,9 +242,9 @@ create table tbl_etapa(
 	id 			            int                     not null primary key auto_increment,
     titulo 		            varchar(100)            not null,
     descricao               text                    not null,
-    ordem   
-                    int             not null,                -- posição na jornada
-    is_repetivel            boolean         not null default false,  -- true na última etapa
+    ordem                   int                     not null, 
+    documento		        varchar(255),               -- posição na jornada
+    is_repetivel            boolean                 not null default false,  -- true na última etapa
     is_agendavel            boolean                 not null,
     is_obrigatorio          boolean                 not null,
     is_solicita_arquivo     boolean                 not null,
@@ -271,6 +259,9 @@ create table tbl_etapa(
     references			tbl_jornada(id)		      # de onde vem a FK
 
 );
+
+
+
 
 
 
@@ -376,19 +367,7 @@ create table tbl_agendamento(
 
 
 
-#CRIAÇÃO DA TABELA documento instituicao
-create table tbl_documento_instituicao(
-	id 			    int                     not null primary key auto_increment,
-    documento		varchar(255)            not null,
 
-    id_etapa        int                     not null,
-
-    #fazer relacao entre duas tabelas 
-    constraint			FK_ETAPA_DOCUMENTOINSTITUICAO       # nome do relacionamento
-    foreign key			(id_etapa)    		                # quem sera a FK natabla FK(foren key)
-    references			tbl_etapa(id)		                # de onde vem a FK
-
-);
 
 
 
@@ -414,12 +393,6 @@ create table tbl_documento_doadora(
     references			tbl_doadora(id)		  # de onde vem a FK
 
 );
-
-INSERT INTO tbl_tipo_coleta (tipo)
-VALUES ('Leite materno');
-
-
-
 
 
 # CADASTRA DOADORA
@@ -521,18 +494,6 @@ END$$
 DELIMITER ;
 
 
-# Teste (cria uma doadora de verdade, rode só quando quiser testar):
-# CALL proccadastrardoadora(
-#     'Maria da Silva', '529.982.247-25', NULL, '1995-04-20', 'maria@email.com',
-#     'hash_da_senha', 'sal_aleatorio', '(11) 91234-5678',
-#     'Rua das Flores', '01234-567', 'Centro', '100', 'Apto 12',
-#     -23.55052000, -46.63330800, 'São Paulo', 'SP'
-# );
-
-
-
-
-
 
 DROP PROCEDURE IF EXISTS proccadastrarfuncionario;
 
@@ -616,8 +577,6 @@ select func.id, func.nome, func.cpf, func.data_nascimento, func.email, func.senh
     inner join tbl_telefone tel
     on func.id_telefone = tel.id
     where func.id = 5;
-
-
 
 # CADASTRA CAMPANHA
 
@@ -816,46 +775,8 @@ END$$
 
 DELIMITER ;
 
--- Teste manual (telefones só com dígitos, igual ao controller)
-CALL proccadastrarinstituicao(
-    -- Instituição
-    'Banco de Leite Esperança',
-    '12.345.678/0001-90',
-    'contato@esperanca.org',
-    'foto.jpg',
-    1,
-    '11999999999',
-    -- Endereço
-    'Rua das Flores',
-    '06000000', 'Centro',
-    '100',
-    'Sala 2',
-    -23.55052000,
-    -46.63330800,
-    'Osasco',
-    'SP',
-    -- Horários
-    1, '00:00', '00:00',    -- domingo (fechado)
-    2, '08:00', '17:00',    -- segunda
-    3, '08:00', '17:00',    -- terça
-    4, '08:00', '17:00',    -- quarta
-    5, '08:00', '17:00',    -- quinta
-    6, '08:00', '17:00',    -- sexta
-    7, '08:00', '12:00',    -- sábado
-    -- Funcionário
-    'Maria Souza',
-    '123.456.789-00',
-    '1990-05-20',
-    'maria@esperanca.org',
-    'senha_hash_aqui',
-    'sal_aleatorio_aqui',
-    '11988887777'
-);
-
 
 SELECT * FROM tbl_instituicao ORDER BY id DESC;
-
-
 
 
 #########################################################################################################
@@ -977,30 +898,6 @@ END$$
 
 DELIMITER ;
 
-CALL procatualizardoadora(
-    1,                              -- id da doadora
-    'Ana Paula Lima',               -- nome
-    '987.654.321-00',               -- cpf
-    'ana_nova.jpg',                 -- foto
-    '1995-03-10',                   -- data de nascimento
-    'ana@email.com',                -- email
-    'novo_hash_aqui',               -- senha (já criptografada)
-    'novo_sal_aqui',                -- sal
-    '(11) 97777-6666',              -- telefone
-    'Av. Brasil',                   -- logradouro
-    '06100-000',                    -- cep
-    'Jardim América',               -- bairro
-    '250',                          -- numero
-    'Apto 12',                      -- complemento
-    -23.56000000,                   -- latitude
-    -46.64000000,                   -- longitude
-    'Osasco',                       -- cidade
-    'SP'                            -- sigla do estado
-);
-
-
-
-
 DELIMITER $$
 
 CREATE PROCEDURE procatualizarfuncionario (
@@ -1064,19 +961,6 @@ BEGIN
 END$$
 
 DELIMITER ;
-
-
-CALL procatualizarfuncionario(
-    1,                              -- id do funcionário
-    'Maria Souza Lima',             -- nome
-    '123.456.789-00',               -- cpf
-    '1990-05-20',                   -- data de nascimento
-    'maria.nova@esperanca.org',     -- email
-    TRUE,                           -- adm (TRUE = administrador)
-    'novo_hash_aqui',               -- senha (já criptografada)
-    'novo_sal_aqui',                -- sal
-    '(11) 96666-5555'               -- telefone
-);
 
 
 SELECT * FROM tbl_doadora WHERE id = 1;
@@ -1228,4 +1112,100 @@ BEGIN
     COMMIT;
 END$$
 
+DELIMITER ;	
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE proccadastrarjornada(
+    IN  p_is_ativo        BOOLEAN,
+    IN  p_nome            VARCHAR(50),
+    IN  p_descricao       TEXT,
+    IN  p_id_instituicao  INT,
+    IN  p_etapas          JSON,      -- array de etapas
+    OUT p_codigo          INT        -- 200 = sucesso | 400 = dados inválidos | 404 = instituição inexistente | 500 = erro
+)
+BEGIN
+    DECLARE v_id_jornada INT;
+
+    -- Qualquer erro SQL: desfaz tudo e retorna 500
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_codigo = 500;
+        SELECT p_codigo AS codigo, 'Erro ao cadastrar a jornada' AS mensagem;
+    END;
+
+    -- Validações básicas
+    IF p_nome IS NULL OR TRIM(p_nome) = ''
+       OR p_etapas IS NULL
+       OR JSON_TYPE(p_etapas) <> 'ARRAY'
+       OR JSON_LENGTH(p_etapas) = 0 THEN
+        SET p_codigo = 400;
+        SELECT p_codigo AS codigo, 'Informe o nome e ao menos uma etapa' AS mensagem;
+
+    ELSEIF NOT EXISTS (SELECT 1 FROM tbl_instituicao WHERE id = p_id_instituicao) THEN
+        SET p_codigo = 404;
+        SELECT p_codigo AS codigo, 'Instituição não encontrada' AS mensagem;
+
+    ELSE
+        START TRANSACTION;
+
+        -- 1) Jornada
+        INSERT INTO tbl_jornada (is_ativo, nome, descricao, id_instituicao)
+        VALUES (p_is_ativo, p_nome, p_descricao, p_id_instituicao);
+
+        SET v_id_jornada = LAST_INSERT_ID();
+
+        -- 2) Etapas (quantas vierem no JSON)
+        INSERT INTO tbl_etapa (
+            titulo, descricao, ordem, documento,
+            is_repetivel, is_agendavel, is_obrigatorio,
+            is_solicita_arquivo, is_precisa_aprovacao, id_jornada
+        )
+        SELECT
+            jt.titulo,
+            jt.descricao,
+            COALESCE(jt.ordem, jt.seq),   -- se não vier "ordem", usa a posição no array
+            jt.documento,                 -- NULL quando a etapa não tem documento
+            jt.is_repetivel,
+            jt.is_agendavel,
+            jt.is_obrigatorio,
+            jt.is_solicita_arquivo,
+            jt.is_precisa_aprovacao,
+            v_id_jornada
+        FROM JSON_TABLE(
+            p_etapas, '$[*]' COLUMNS (
+                seq                  FOR ORDINALITY,
+                titulo               VARCHAR(100) PATH '$.titulo',
+                descricao            TEXT         PATH '$.descricao',
+                ordem                INT          PATH '$.ordem'                NULL ON EMPTY,
+                documento            VARCHAR(255) PATH '$.documento'            NULL ON EMPTY,
+                is_repetivel         TINYINT      PATH '$.is_repetivel'         DEFAULT '0' ON EMPTY,
+                is_agendavel         TINYINT      PATH '$.is_agendavel'         DEFAULT '0' ON EMPTY,
+                is_obrigatorio       TINYINT      PATH '$.is_obrigatorio'       DEFAULT '0' ON EMPTY,
+                is_solicita_arquivo  TINYINT      PATH '$.is_solicita_arquivo'  DEFAULT '0' ON EMPTY,
+                is_precisa_aprovacao TINYINT      PATH '$.is_precisa_aprovacao' DEFAULT '0' ON EMPTY
+            )
+        ) AS jt;
+
+        COMMIT;
+        SET p_codigo = 200;
+
+        -- 3) Retorno: sucesso + jornada cadastrada
+        SELECT p_codigo AS codigo, 'Jornada cadastrada com sucesso' AS mensagem, j.*
+        FROM tbl_jornada j
+        WHERE j.id = v_id_jornada;
+
+        -- 4) Retorno: etapas cadastradas
+        SELECT e.*
+        FROM tbl_etapa e
+        WHERE e.id_jornada = v_id_jornada
+        ORDER BY e.ordem;
+    END IF;
+END$$
+
 DELIMITER ;
+
+select * from tbl_instituicao;
