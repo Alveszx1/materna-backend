@@ -45,6 +45,9 @@ const insertJornada = async function (jornada) {
     }
 }
 
+
+
+
 module.exports = {
     insertJornada
 }

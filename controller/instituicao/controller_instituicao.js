@@ -259,6 +259,38 @@ const atualizarInstituicao = async function (instituicao, id, contentType) {
     }
 }
 
+const buscarHorarioPorInstituicao = async function (idInstituicao) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (idInstituicao == undefined || idInstituicao == "" || idInstituicao == null || isNaN(idInstituicao) || idInstituicao < 1) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_INSTITUICAO] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await horarioDAO.selectHorariosByInstituicao(idInstituicao)
+
+        if (result) {
+            if (result.length > 0) {
+
+                customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+                customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+                customMessage.DEFAULT_MESSAGE.count = result.length
+                customMessage.DEFAULT_MESSAGE.response.horario = result
+
+                return customMessage.DEFAULT_MESSAGE
+            }
+
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const listarInstituicao = async function () {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
@@ -319,5 +351,6 @@ module.exports = {
     inserirNovaInstituicao,
     listarInstituicao,
     buscarInstituicaoById,
-    atualizarInstituicao
+    atualizarInstituicao,
+    buscarHorarioPorInstituicao
 }
