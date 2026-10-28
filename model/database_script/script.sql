@@ -1,4 +1,3 @@
-
 create database db_tech_bridge_materna;
 
 use db_tech_bridge_materna;
@@ -243,7 +242,7 @@ create table tbl_etapa(
     titulo 		            varchar(100)            not null,
     descricao               text                    not null,
     ordem                   int                     not null, 
-    documento		        varchar(255),               -- posição na jornada
+    documento		        varchar(255),               
     is_repetivel            boolean                 not null default false,  -- true na última etapa
     is_agendavel            boolean                 not null,
     is_obrigatorio          boolean                 not null,
@@ -260,58 +259,28 @@ create table tbl_etapa(
 
 );
 
+#CRIAÇÃO DA TABELA jornada doacao
+create table tbl_jornada_doacao(
+	id 			            int                     not null primary key auto_increment,
+    ciclo                   int                     not null,
+    data_conclusao          date,
 
-
-
-
-
-#CRIAÇÃO DA TABELA ciclo
-create table tbl_ciclo(
-	id 			          int                      not null primary key auto_increment,
-    numero_ciclo          int                      not null,
-    is_concluido	      boolean                  not null,
-
-    id_jornada            int                      not null,
-    id_doadora            int                      not null,
-
+    id_etapa                int                     not null,
+    id_doadora              int                     not null,
 
     #fazer relacao entre duas tabelas 
-    constraint			FK_JORNADA_CICLO          # nome do relacionamento
-    foreign key			(id_jornada)    		  # quem sera a FK natabla FK(foren key)
-    references			tbl_jornada(id),		  # de onde vem a FK
-
-
-	#fazer relacao entre duas tabelas 
-    constraint			FK_DOADORA_CICLO       # nome do relacionamento
-    foreign key			(id_doadora)    		  # quem sera a FK natabla FK(foren key)
-    references			tbl_doadora(id)		  # de onde vem a FK
-);
-
-
-#CRIAÇÃO DA TABELA etapa ciclo
-create table tbl_etapa_ciclo(
-	id 			        int                     not null primary key auto_increment,
-    data_conclusao 		date                    null,
-    
-    id_etapa            int                     not null,
-    id_ciclo            int                     not null,
-
+    constraint			FK_ETAPA_JORNADADOACAO        # nome do relacionamento
+    foreign key			(id_etapa)    		          # quem sera a FK na tabela
+    references			tbl_etapa(id),		          # de onde vem a FK
 
     #fazer relacao entre duas tabelas 
-    constraint			FK_ETAPA_ETAPACICLO       # nome do relacionamento
-    foreign key			(id_etapa)    		  # quem sera a FK natabla FK(foren key)
-    references			tbl_etapa(id),		  # de onde vem a FK
+    constraint			FK_DOADORA_JORNADADOACAO      # nome do relacionamento
+    foreign key			(id_doadora)    		      # quem sera a FK na tabela
+    references			tbl_doadora(id)		          # de onde vem a FK
 
-
-	#fazer relacao entre duas tabelas 
-    constraint			FK_CICLO_ETAPACICLO       # nome do relacionamento
-    foreign key			(id_ciclo)    		  # quem sera a FK natabla FK(foren key)
-    references			tbl_ciclo(id)		  # de onde vem a FK
 );
-
 
 ##############
-
 
 #CRIAÇÃO DA TABELA cadastro horario
 create table tbl_cadastro_horario(
@@ -341,16 +310,16 @@ create table tbl_agendamento(
 	id 			    int                     not null primary key auto_increment,
   
     
-	id_ciclo  						  int                     not null,
+	id_jornada_doacao 						  int                     not null,
     id_cadastro_horario				  int                     not null,
     id_status_agendamento			  int                     not null,
 
 
 
 	#fazer relacao entre duas tabelas 
-    constraint			FK_CICLO_AGENDAMENTO      # nome do relacionamento
-    foreign key			(id_ciclo)    		  # quem sera a FK natabla FK(foren key)
-    references			tbl_ciclo(id),		  # de onde vem a FK
+    constraint			FK_JORNADADOACAO_AGENDAMENTO          # nome do relacionamento
+    foreign key			(id_jornada_doacao)    		  # quem sera a FK natabla FK(foren key)
+    references			tbl_jornada_doacao(id),		  # de onde vem a FK
     
     #fazer relacao entre duas tabelas 
     constraint			FK_CADASTROHORARIO_AGENDAMENTO      # nome do relacionamento
@@ -366,26 +335,21 @@ create table tbl_agendamento(
 );
 
 
-
-
-
-
-
 #CRIAÇÃO DA TABELA documento doadora
 create table tbl_documento_doadora(
 	id 			            int                     not null primary key auto_increment,
     documento		        varchar(255)             not null,
     motivo_recusa		    varchar(255)             not null,
     
-    id_etapa_ciclo          int                     not null,
+    id_jornada_doacao       int                     not null,
     id_doadora              int                     not null,
 
 
 
     #fazer relacao entre duas tabelas 
-    constraint			FK_ETAPACICLO_DOCUMENTODOADORA       # nome do relacionamento
-    foreign key			(id_etapa_ciclo)    		  # quem sera a FK natabla FK(foren key)
-    references			tbl_etapa_ciclo(id),		  # de onde vem a FK
+    constraint			FK_JORNADADOACAO_DOCUMENTODOADORA       # nome do relacionamento
+    foreign key			(id_jornada_doacao)    		            # quem sera a FK natabla FK(foren key)
+    references			tbl_jornada_doacao(id),		             # de onde vem a FK
     
      #fazer relacao entre duas tabelas 
     constraint			FK_DOADORA_DOCUMENTODOADORA       # nome do relacionamento
@@ -394,10 +358,7 @@ create table tbl_documento_doadora(
 
 );
 
-
-# CADASTRA DOADORA
-
-DROP PROCEDURE IF EXISTS proccadastrardoadora;
+DROP PROCEDURE IF EXISTS proccadastrarfuncionario;
 
 DELIMITER $$
 
@@ -1278,6 +1239,82 @@ END$$
 
 DELIMITER ;
 
-CALL proccadastrarhorario('2026-11-10', '14:30:00', 1);
-
 select * from tbl_etapa;
+
+###################
+DELIMITER $$
+
+	CREATE PROCEDURE procvincularetapadoadora (
+		IN  p_id_doadora        INT,
+		IN  p_id_etapa          INT,
+
+		# Retorno: id da linha criada em tbl_jornada_doacao
+		OUT p_id_jornada_doacao INT
+	)
+	BEGIN
+		DECLARE v_is_repetivel  BOOLEAN;
+		DECLARE v_ciclo         INT DEFAULT 1;
+		DECLARE v_ultimo_ciclo  INT;
+		DECLARE v_ultima_concl  DATE;
+
+		# Se qualquer erro acontecer, desfaz tudo
+		DECLARE EXIT HANDLER FOR SQLEXCEPTION
+		BEGIN
+			ROLLBACK;
+			RESIGNAL;
+		END;
+
+		# Doadora existe?
+		IF NOT EXISTS (SELECT 1 FROM tbl_doadora WHERE id = p_id_doadora) THEN
+			SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'Erro: doadora nao encontrada.';
+		END IF;
+
+		# Etapa existe?
+		SELECT is_repetivel INTO v_is_repetivel
+		FROM tbl_etapa
+		WHERE id = p_id_etapa;
+
+		IF v_is_repetivel IS NULL THEN
+			SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'Erro: etapa nao encontrada.';
+		END IF;
+
+		START TRANSACTION;
+
+		# Ja existe ligacao dessa doadora com essa etapa? (pega o ultimo ciclo)
+		SELECT ciclo, data_conclusao
+		INTO   v_ultimo_ciclo, v_ultima_concl
+		FROM tbl_jornada_doacao
+		WHERE id_doadora = p_id_doadora
+		  AND id_etapa   = p_id_etapa
+		ORDER BY ciclo DESC
+		LIMIT 1
+		FOR UPDATE;
+
+		IF v_ultimo_ciclo IS NOT NULL THEN
+
+			# Etapa normal: so pode ser ligada uma vez
+			IF v_is_repetivel = FALSE THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Erro: a doadora ja esta ligada a esta etapa.';
+			END IF;
+
+			# Etapa repetivel: so abre novo ciclo se o anterior foi concluido
+			IF v_ultima_concl IS NULL THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Erro: o ciclo atual desta etapa ainda nao foi concluido.';
+			END IF;
+
+			SET v_ciclo = v_ultimo_ciclo + 1;
+		END IF;
+
+		INSERT INTO tbl_jornada_doacao (ciclo, data_conclusao, id_etapa, id_doadora)
+		VALUES (v_ciclo, NULL, p_id_etapa, p_id_doadora);
+
+		SET p_id_jornada_doacao = LAST_INSERT_ID();
+
+		COMMIT;
+	END$$
+
+	DELIMITER ;
