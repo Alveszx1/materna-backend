@@ -37,7 +37,6 @@ const validarDados = async function (doadora) {
         return customMessage.ERROR_BAD_REQUEST
 
     } else if (doadora.foto != undefined && doadora.foto != null && doadora.foto != "" && doadora.foto.length > 255) {
-        // foto é opcional: só valida se vier preenchida
         customMessage.ERROR_BAD_REQUEST.field = "[FOTO] INVÁLIDA"
         return customMessage.ERROR_BAD_REQUEST
 
@@ -326,7 +325,7 @@ const excluirDoadora = async function (id) {
 
     try {
 
-        let resultBuscarDoadora = await buscarDoadora(id)
+        let resultBuscarDoadora = await buscarDoadoraById(id)
 
         if (resultBuscarDoadora.status) {
 

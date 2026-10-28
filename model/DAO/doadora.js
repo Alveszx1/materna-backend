@@ -130,8 +130,23 @@ const updateDoadora = async function (doadora) {
     }
 };
 
+const deleteDoadora = async function(id){
+    try {
+        let sql = `DELETE FROM tbl_doadora WHERE id=${id};`
+
+        let result = await knexConection.raw(sql)
+        if(result)
+            return true
+        else 
+            return false
+    } catch (error) {
+            return false
+    }
+}
+
 module.exports = {
     insertDoadora,
     selectByIdDoadora,
-    updateDoadora
+    updateDoadora,
+    deleteDoadora
 };
