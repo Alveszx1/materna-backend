@@ -20,11 +20,10 @@ const insertVinculoEtapaDoadora = async function (vinculo) {
         })
 
     } catch (error) {
-        // erro de regra levantado pela procedure com SIGNAL SQLSTATE '45000'
+        
         if (error.sqlState == "45000") {
             return { mensagem: error.sqlMessage }
         }
-
         console.log(error)
         return false
     }

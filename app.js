@@ -16,6 +16,7 @@ const instituicaoRouter = require("./routes/instituicao.router.js")
 const jornadaRouter = require("./routes/jornada.router.js")
 const horarioRouter = require("./routes/horario_instituicao.js")
 const jornadaDoacao = require("./routes/jornadaDoacao.router.js")
+const agendamento = require("./routes/agendamento.router.js")
 
 
 
@@ -29,6 +30,7 @@ app.use("/v1/materna/instituicao", instituicaoRouter)
 app.use("/v1/materna/jornada", jornadaRouter)
 app.use("/v1/materna/horario", horarioRouter)
 app.use("/v1/materna/vinculo-etapa-doadora", jornadaDoacao)
+app.use("/v1/materna/agendamento", agendamento)
 
 
 app.listen(9090, function(){

@@ -1318,3 +1318,195 @@ DELIMITER $$
 	END$$
 
 	DELIMITER ;
+    
+    
+#######################################################
+INSERT INTO tbl_status_agendamento (status) VALUES
+('Pendente'),
+('Aceito'),
+('Recusado');
+
+alter table tbl_cadastro_horario
+    add column disponivel boolean not null default true;
+
+
+DROP PROCEDURE IF EXISTS procagendar;
+
+DELIMITER $$
+
+CREATE PROCEDURE procagendar (
+    IN  p_id_cadastro_horario   INT,
+    IN  p_id_jornada_doacao     INT,
+    IN  p_id_status_agendamento INT,
+
+    # Retorno: id do agendamento criado
+    OUT p_id_agendamento        INT
+)
+BEGIN
+    DECLARE v_is_agendavel  BOOLEAN;
+    DECLARE v_disponivel    BOOLEAN;
+
+    # Se qualquer erro acontecer, desfaz tudo
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    # A etapa da doadora e agendavel?
+    SELECT e.is_agendavel
+    INTO   v_is_agendavel
+    FROM tbl_jornada_doacao jd
+    JOIN tbl_etapa e ON e.id = jd.id_etapa
+    WHERE jd.id = p_id_jornada_doacao;
+
+    IF v_is_agendavel IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Erro: registro da jornada nao encontrado.';
+    END IF;
+
+    IF v_is_agendavel = FALSE THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Erro: esta etapa nao permite agendamento.';
+    END IF;
+
+    # O horario existe e esta disponivel?
+    SELECT disponivel
+    INTO   v_disponivel
+    FROM tbl_cadastro_horario
+    WHERE id = p_id_cadastro_horario
+    FOR UPDATE;
+
+    IF v_disponivel IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Erro: horario nao encontrado.';
+    END IF;
+
+    IF v_disponivel = FALSE THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Erro: este horario nao esta disponivel.';
+    END IF;
+
+    # AGENDAMENTO
+    INSERT INTO tbl_agendamento
+        (id_jornada_doacao, id_cadastro_horario, id_status_agendamento)
+    VALUES
+        (p_id_jornada_doacao, p_id_cadastro_horario, p_id_status_agendamento);
+
+    SET p_id_agendamento = LAST_INSERT_ID();
+
+    COMMIT;
+
+    # Retorno de sucesso
+    SELECT 200 AS codigo,
+           'Agendamento realizado com sucesso' AS mensagem,
+           p_id_agendamento AS id_agendamento;
+END$$
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS procatualizaragendamento;
+
+DELIMITER $$
+
+CREATE PROCEDURE procatualizaragendamento (
+    IN p_id_agendamento         INT,
+    IN p_id_status_agendamento  INT
+)
+BEGIN
+    DECLARE v_id_cadastro_horario INT;
+    DECLARE v_id_status_atual     INT;
+    DECLARE v_disponivel          BOOLEAN;
+
+    # Ids dos status (Pendente = 1, Aceito = 2, Recusado = 3)
+    DECLARE v_id_status_pendente  INT DEFAULT 1;
+    DECLARE v_id_status_aceito    INT DEFAULT 2;
+    DECLARE v_id_status_recusado  INT DEFAULT 3;
+
+    # Se qualquer erro acontecer, desfaz tudo
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    # So aceita Aceito ou Recusado
+    IF p_id_status_agendamento NOT IN (v_id_status_aceito, v_id_status_recusado) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Erro: o status deve ser Aceito ou Recusado.';
+    END IF;
+
+    START TRANSACTION;
+
+    # Busca o agendamento (trava a linha)
+    SELECT id_cadastro_horario, id_status_agendamento
+    INTO   v_id_cadastro_horario, v_id_status_atual
+    FROM tbl_agendamento
+    WHERE id = p_id_agendamento
+    FOR UPDATE;
+
+    IF v_id_cadastro_horario IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Erro: agendamento nao encontrado.';
+    END IF;
+
+    # So muda se estiver Pendente
+    IF v_id_status_atual <> v_id_status_pendente THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Erro: so e possivel alterar agendamentos pendentes.';
+    END IF;
+
+    IF p_id_status_agendamento = v_id_status_aceito THEN
+
+        # Trava o horario e confere se ainda esta disponivel
+        SELECT disponivel INTO v_disponivel
+        FROM tbl_cadastro_horario
+        WHERE id = v_id_cadastro_horario
+        FOR UPDATE;
+
+        IF v_disponivel = FALSE THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Erro: este horario nao esta mais disponivel.';
+        END IF;
+
+        # Aceita e deixa o horario indisponivel
+        UPDATE tbl_agendamento
+        SET id_status_agendamento = v_id_status_aceito
+        WHERE id = p_id_agendamento;
+
+        UPDATE tbl_cadastro_horario
+        SET disponivel = FALSE
+        WHERE id = v_id_cadastro_horario;
+
+    ELSE
+
+        # Recusa (o horario continua disponivel)
+        UPDATE tbl_agendamento
+        SET id_status_agendamento = v_id_status_recusado
+        WHERE id = p_id_agendamento;
+
+    END IF;
+
+    COMMIT;
+
+    # Retorno de sucesso
+    SELECT 200 AS codigo,
+           'Agendamento atualizado com sucesso' AS mensagem,
+           p_id_agendamento AS id_agendamento;
+END$$
+
+DELIMITER ;
+
+
+CALL procatualizaragendamento(1, 2);
+
+SELECT id, id_status_agendamento FROM tbl_agendamento WHERE id = 1;
+SELECT id, disponivel FROM tbl_cadastro_horario;
+
+SELECT id, id_cadastro_horario FROM tbl_agendamento;
+
+
+
+
