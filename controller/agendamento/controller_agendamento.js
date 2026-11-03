@@ -149,8 +149,68 @@ const atualizarAgendamento = async function (id, dados, contentType) {
     }
 }
 
-module.exports = {
-    inserirNovoAgendamento,
-    atualizarAgendamento
+const listarAgendamentos = async function () {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        let result = await agendamentoDAO.selectAllAgendamentos()
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_AGENDAMENTO
+        }
+
+        if (result.length === 0) {
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+        customMessage.DEFAULT_MESSAGE.count = result.length
+        customMessage.DEFAULT_MESSAGE.response.agendamento = result
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
 }
 
+const listarAgendamentosPorDoadora = async function (idDoadora) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        idDoadora = Number(idDoadora)
+
+        if (!Number.isInteger(idDoadora) || idDoadora <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_DOADORA] INVÁLIDO (deve ser um número inteiro maior que 0)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await agendamentoDAO.selectAgendamentosPorDoadora(idDoadora)
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_AGENDAMENTO
+        }
+
+        if (result.length === 0) {
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+        customMessage.DEFAULT_MESSAGE.count = result.length
+        customMessage.DEFAULT_MESSAGE.response.agendamento = result
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
+module.exports = {
+    inserirNovoAgendamento,
+    atualizarAgendamento,
+    listarAgendamentos,
+    listarAgendamentosPorDoadora
+}

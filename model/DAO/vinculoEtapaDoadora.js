@@ -29,6 +29,47 @@ const insertVinculoEtapaDoadora = async function (vinculo) {
     }
 }
 
+const updateDataConclusaoJornadaDoacao = async function (id, dataConclusao) {
+    try {
+        let sql = `
+            UPDATE tbl_jornada_doacao
+            SET data_conclusao = ?
+            WHERE id = ?
+        `
+
+        await knexConection.raw(sql, [dataConclusao, id])
+        return true
+    } catch (error) {
+        console.error('Erro ao atualizar data de conclusão da jornada de doação:', error)
+        return false
+    }
+}
+
+const insertDocumentoDoadora = async function (idJornadaDoacao, idDoadora, documento) {
+    try {
+        let sql = `
+            INSERT INTO tbl_documento_doadora
+                (documento, motivo_recusa, id_jornada_doacao, id_doadora)
+            SELECT ?, '', jd.id, jd.id_doadora
+            FROM tbl_jornada_doacao AS jd
+            WHERE jd.id = ? AND jd.id_doadora = ?
+        `
+
+        let result = await knexConection.raw(sql, [documento, idJornadaDoacao, idDoadora])
+
+        if (result[0].affectedRows > 0) {
+            return result[0].insertId
+        } else {
+            return null
+        }
+    } catch (error) {
+        console.error('Erro ao salvar documento da doadora:', error)
+        return false
+    }
+}
+
 module.exports = {
-    insertVinculoEtapaDoadora
+    insertVinculoEtapaDoadora,
+    updateDataConclusaoJornadaDoacao,
+    insertDocumentoDoadora
 }

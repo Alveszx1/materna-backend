@@ -10,6 +10,20 @@ const bodyParserJson = bodyParser.json()
 
 const controllerAgendamento = require('../controller/agendamento/controller_agendamento.js')
 
+router.get('/doadora/:id', async function (request, response) {
+    let result = await controllerAgendamento.listarAgendamentosPorDoadora(request.params.id)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
+router.get('/', async function (request, response) {
+    let result = await controllerAgendamento.listarAgendamentos()
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.post('/', bodyParserJson, async function(request, response) {
     let dados = request.body
     let contentType = request.headers['content-type']

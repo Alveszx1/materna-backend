@@ -117,6 +117,77 @@ const inserirNovaJornada = async function (jornada, contentType) {
     }
 }
 
+const listarJornadasPorInstituicao = async function (idInstituicao) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        idInstituicao = Number(idInstituicao)
+
+        if (!Number.isInteger(idInstituicao) || idInstituicao <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_INSTITUICAO] INVÁLIDO (deve ser um número inteiro maior que 0)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await jornadaDAO.selectJornadasPorInstituicao(idInstituicao)
+
+        if (result) {
+            if (result.length > 0) {
+                customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+                customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+                customMessage.DEFAULT_MESSAGE.count = result.length
+                customMessage.DEFAULT_MESSAGE.response.jornada = result
+
+                return customMessage.DEFAULT_MESSAGE
+            } else {
+                return customMessage.ERROR_NOT_FOUND
+            }
+        } else {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_JORNADA
+        }
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
+const atualizarStatusJornada = async function (id, dados, contentType) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (String(contentType).toUpperCase() != "APPLICATION/JSON") {
+            return customMessage.ERROR_CONTENT_TYPE
+        }
+
+        id = Number(id)
+
+        if (!Number.isInteger(id) || id <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID] INVÁLIDO (deve ser um número inteiro maior que 0)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        if (dados == undefined || dados == null || typeof dados.is_ativo != "boolean") {
+            customMessage.ERROR_BAD_REQUEST.field = "[IS_ATIVO] INVÁLIDO (deve ser true ou false)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await jornadaDAO.updateStatusJornada(id, dados.is_ativo)
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_JORNADA
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+        customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_UPDATE_ITEM.message
+        customMessage.DEFAULT_MESSAGE.response = { id, is_ativo: dados.is_ativo }
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const tratarDados = async function (jornada) {
 
     jornada.nome = jornada.nome.replaceAll("'", "")
@@ -133,5 +204,7 @@ const tratarDados = async function (jornada) {
 
 
 module.exports = {
-    inserirNovaJornada
+    inserirNovaJornada,
+    listarJornadasPorInstituicao,
+    atualizarStatusJornada
 }

@@ -45,9 +45,47 @@ const insertJornada = async function (jornada) {
     }
 }
 
+const selectJornadasPorInstituicao = async function (idInstituicao) {
+    try {
+        let sql = `
+            SELECT *
+            FROM tbl_jornada
+            WHERE id_instituicao = ?
+            ORDER BY id DESC
+        `
+
+        let result = await knexConection.raw(sql, [idInstituicao])
+
+        if (Array.isArray(result)) {
+            return result[0]
+        } else {
+            return false
+        }
+    } catch (error) {
+        return false
+    }
+}
+
+const updateStatusJornada = async function (id, isAtivo) {
+    try {
+        let sql = `
+            UPDATE tbl_jornada
+            SET is_ativo = ?
+            WHERE id = ?
+        `
+
+        await knexConection.raw(sql, [isAtivo, id])
+        return true
+    } catch (error) {
+        console.error('Erro ao atualizar status da jornada:', error)
+        return false
+    }
+}
 
 
 
 module.exports = {
-    insertJornada
+    insertJornada,
+    selectJornadasPorInstituicao,
+    updateStatusJornada
 }
