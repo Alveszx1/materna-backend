@@ -1508,5 +1508,32 @@ SELECT id, disponivel FROM tbl_cadastro_horario;
 SELECT id, id_cadastro_horario FROM tbl_agendamento;
 
 
+SELECT
+    i.id,
+    i.nome,
+    i.foto,
+    e_inst.logradouro,
+    e_inst.numero,
+    e_inst.bairro,
+    t.tipo AS tipo_coleta,
+    ROUND(
+        ST_Distance_Sphere(
+            POINT(e_inst.longitude, e_inst.latitude),
+            POINT(e_doa.longitude, e_doa.latitude)
+        ) / 1000, 1
+    ) AS distancia_km
+FROM tbl_doadora d
+JOIN tbl_endereco e_doa   ON e_doa.id = d.id_endereco
+JOIN tbl_instituicao i
+JOIN tbl_endereco e_inst  ON e_inst.id = i.id_endereco
+JOIN tbl_tipo_coleta t    ON t.id = i.id_coleta
+WHERE d.id = 1   -- id da doadora logada
+ORDER BY distancia_km ASC
+LIMIT 3;
+
+select * from tbl_doadora,
+select * from tbl_endereco,
+
+
 
 

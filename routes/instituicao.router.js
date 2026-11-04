@@ -28,6 +28,16 @@ router.put('/:id', bodyParserJson, async function(request, response) {
     response.json(result)
 })
 
+// GET /v1/materna/instituicao/proximas?cep=01246-000
+router.get("/proximas", async function (request, response) {
+    let cep = request.query.cep
+
+    let instituicao = await controllerInstituicao.buscarInstituicoesProximasByCep(cep)
+
+    response.status(instituicao.status_code)
+    response.json(instituicao)
+})
+
 router.get('/:id', async function(request, response) {
     let id = request.params.id
     let result = await controllerInstituicao.buscarInstituicaoById(id)
@@ -35,6 +45,8 @@ router.get('/:id', async function(request, response) {
     response.status(result.status_code)
     response.json(result)
 })
+
+
 
 router.post('/', bodyParserJson, async function(request, response) {
     let dados = request.body

@@ -12,18 +12,32 @@ const knexConection = knex(knexDatabaseConfig.development);
 const insertVinculoEtapaDoadora = async function (vinculo) {
     try {
         return await knexConection.transaction(async trx => {
-            await trx.raw("CALL procvincularetapadoadora(?, ?, @id)", [vinculo.id_doadora, vinculo.id_etapa])
 
-            const [rows] = await trx.raw("SELECT @id AS id_jornada_doacao")
+            await trx.raw(
+                "CALL procvincularetapadoadora(?, ?, ?, ?, @id)",
+                [
+                    vinculo.id_doadora,
+                    vinculo.id_etapa,
+                    vinculo.id_instituicao,
+                    vinculo.id_jornada
+                ]
+            )
 
-            return { id_jornada_doacao: rows[0].id_jornada_doacao }
+            const [rows] = await trx.raw(
+                "SELECT @id AS id_jornada_doacao"
+            )
+
+            return {
+                id_jornada_doacao: rows[0].id_jornada_doacao
+            }
         })
 
     } catch (error) {
-        
+
         if (error.sqlState == "45000") {
             return { mensagem: error.sqlMessage }
         }
+
         console.log(error)
         return false
     }

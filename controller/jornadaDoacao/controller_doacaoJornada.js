@@ -42,69 +42,56 @@ const tratarDados = async function (vinculo) {
     return vinculo
 }
 
-
 const vincularEtapaDoadora = async function (vinculo, contentType) {
 
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
     try {
 
-        if (String(contentType).toUpperCase() == "APPLICATION/JSON") {
-
-            let validar = await validarDados(vinculo)
-
-            if (validar) {
-                return validar
-            } else {
-
-                let result = await EtapaDoadoraDAO.insertVinculoEtapaDoadora(await tratarDados(vinculo))
-
-                if (result) {
-
-                    if (result.id_jornada_doacao) {
-
-                        vinculo.id = result.id_jornada_doacao
-
-                        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_CREATED_ITEM.status
-                        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_CREATED_ITEM.status_code
-                        customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_CREATED_ITEM.message
-                        customMessage.DEFAULT_MESSAGE.response = vinculo
-
-                        return customMessage.DEFAULT_MESSAGE
-
-                    } else if (result.mensagem) {
-
-                        let mensagem = String(result.mensagem).toLowerCase()
-
-                        if (mensagem.includes("doadora nao encontrada")) {
-                            customMessage.ERROR_NOT_FOUND.field = "[ID_DOADORA] DOADORA NÃO ENCONTRADA"
-                            return customMessage.ERROR_NOT_FOUND
-
-                        } else if (mensagem.includes("etapa nao encontrada")) {
-                            customMessage.ERROR_NOT_FOUND.field = "[ID_ETAPA] ETAPA NÃO ENCONTRADA"
-                            return customMessage.ERROR_NOT_FOUND
-
-                        } else {
-                            customMessage.ERROR_BAD_REQUEST.field = `[VINCULO] ${result.mensagem}`
-                            return customMessage.ERROR_BAD_REQUEST
-                        }
-
-                    } else {
-                        return customMessage.ERROR_INTERNAL_SERVER_MODEL
-                    }
-
-                } else {
-                    return customMessage.ERROR_INTERNAL_SERVER_MODEL
-                }
-            }
-        } else {
+        if (!String(contentType).toUpperCase().includes("APPLICATION/JSON")) {
             return customMessage.ERROR_CONTENT_TYPE
         }
+
+        let validar = await validarDados(vinculo)
+        if (validar) {
+            return validar
+        }
+
+        let result = await EtapaDoadoraDAO.insertVinculoEtapaDoadora(await tratarDados(vinculo))
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL
+        }
+
+        if (result.id_jornada_doacao) {
+            vinculo.id = result.id_jornada_doacao
+
+            customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_CREATED_ITEM.status
+            customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_CREATED_ITEM.status_code
+            customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_CREATED_ITEM.message
+            customMessage.DEFAULT_MESSAGE.response = vinculo
+
+            return customMessage.DEFAULT_MESSAGE
+        }
+
+        if (result.mensagem) {
+            if (String(result.mensagem).toLowerCase().includes("nao encontrada")) {
+                customMessage.ERROR_NOT_FOUND.field = `[VINCULO] ${result.mensagem}`
+                return customMessage.ERROR_NOT_FOUND
+            }
+
+            customMessage.ERROR_BAD_REQUEST.field = `[VINCULO] ${result.mensagem}`
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        return customMessage.ERROR_INTERNAL_SERVER_MODEL
+
     } catch (error) {
         console.log(error)
         return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
     }
 }
+
 
 const atualizarDataConclusao = async function (id, dados, contentType) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))

@@ -169,7 +169,6 @@ const buscarHorarioById = async function (id) {
 }
 
 
-
 const buscarHorarioPorEtapa = async function (idEtapa) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 

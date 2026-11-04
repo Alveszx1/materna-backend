@@ -259,37 +259,7 @@ const atualizarInstituicao = async function (instituicao, id, contentType) {
     }
 }
 
-const buscarHorarioPorInstituicao = async function (idInstituicao) {
-    let customMessage = JSON.parse(JSON.stringify(configMessages))
 
-    try {
-        if (idInstituicao == undefined || idInstituicao == "" || idInstituicao == null || isNaN(idInstituicao) || idInstituicao < 1) {
-            customMessage.ERROR_BAD_REQUEST.field = "[ID_INSTITUICAO] INVÁLIDO"
-            return customMessage.ERROR_BAD_REQUEST
-        }
-
-        let result = await horarioDAO.selectHorariosByInstituicao(idInstituicao)
-
-        if (result) {
-            if (result.length > 0) {
-
-                customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
-                customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
-                customMessage.DEFAULT_MESSAGE.count = result.length
-                customMessage.DEFAULT_MESSAGE.response.horario = result
-
-                return customMessage.DEFAULT_MESSAGE
-            }
-
-            return customMessage.ERROR_NOT_FOUND
-        }
-
-        return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
-    } catch (error) {
-        console.log(error)
-        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
-    }
-}
 
 const listarInstituicao = async function () {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
@@ -347,10 +317,66 @@ const buscarInstituicaoById = async function (id) {
     }
 }
 
+
+const buscarInstituicoesProximasByCep = async function (cep) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    const regexCep = /^\d{5}-?\d{3}$/
+
+    try {
+
+        if (cep == undefined || cep == "" || cep == null || !regexCep.test(cep)) {
+            customMessage.ERROR_BAD_REQUEST.field = "[CEP] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+
+        } else {
+
+            let resultCoordenadas = await coordenadas.definirLatitudeLongitudePorCEP(cep)
+            console.log("CEP informado:", cep)
+
+            
+
+            if (!resultCoordenadas) {
+                customMessage.ERROR_BAD_REQUEST.field = "[CEP] NÃO FOI POSSÍVEL LOCALIZAR AS COORDENADAS"
+                return customMessage.ERROR_BAD_REQUEST 
+            }
+            
+            let latitude = Number(resultCoordenadas.latitude)
+            let longitude = Number(resultCoordenadas.longitude)
+
+            // 3 = quantidade de bancos retornados
+            let result = await instituicaoDAO.selectInstituicoesProximas(latitude, longitude,20)
+
+            if (result) {
+
+                if (result.length > 0) {
+
+                    customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+                    customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+                    customMessage.DEFAULT_MESSAGE.count = result.length
+                    customMessage.DEFAULT_MESSAGE.response.instituicao = result
+
+                    return customMessage.DEFAULT_MESSAGE //200
+
+                } else {
+                    return customMessage.ERROR_NOT_FOUND //404
+                }
+            } else {
+                return customMessage.ERROR_INTERNAL_SERVER_MODEL //500 (model)
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER //500 (controller)
+    }
+}
+
+
 module.exports = {
     inserirNovaInstituicao,
     listarInstituicao,
     buscarInstituicaoById,
     atualizarInstituicao,
-    buscarHorarioPorInstituicao
+    buscarInstituicoesProximasByCep,
+    
 }

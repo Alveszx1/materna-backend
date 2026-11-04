@@ -161,7 +161,24 @@ const selectByIdInstituicao = async function (id) {
                    endereco.logradouro, endereco.cep, endereco.bairro,
                    endereco.numero, endereco.complemento,
                    endereco.latitude, endereco.longitude,
-                   cidade.nome as cidade, estado.sigla as sigla_estado
+                   cidade.nome as cidade, estado.sigla as sigla_estado,
+
+                   (select json_arrayagg(json_object(
+                               'id',        jor.id,
+                               'nome',      jor.nome,
+                               'descricao', jor.descricao,
+                               'is_ativo',  jor.is_ativo,
+                               'etapas', (select json_arrayagg(json_object(
+                                                      'id',        eta.id,
+                                                      'titulo',    eta.titulo,
+                                                      'descricao', eta.descricao,
+                                                      'ordem',     eta.ordem))
+                                          from tbl_etapa as eta
+                                          where eta.id_jornada = jor.id)))
+                    from tbl_jornada as jor
+                    where jor.id_instituicao = inst.id
+                   ) as jornadas
+
             from tbl_instituicao as inst
             inner join tbl_tipo_coleta as tipo on inst.id_coleta = tipo.id
             inner join tbl_endereco as endereco on inst.id_endereco = endereco.id
@@ -169,10 +186,10 @@ const selectByIdInstituicao = async function (id) {
             inner join tbl_estado as estado on cidade.id_estado = estado.id
             inner join tbl_telefone_instituicao as relacao on inst.id = relacao.id_instituicao
             inner join tbl_telefone as tel on relacao.id_telefone = tel.id
-            where inst.id = ${id}
+            where inst.id = ?
         `
 
-        let result = await knexConection.raw(sql)
+        let result = await knexConection.raw(sql, [id])
 
         if (Array.isArray(result)) {
             return result[0]
@@ -180,6 +197,47 @@ const selectByIdInstituicao = async function (id) {
             return false
         }
     } catch (error) {
+        console.log(error)
+        return false
+    }
+}
+
+// Retorna as instituições mais próximas de uma coordenada
+const selectInstituicoesProximas = async function (latitude, longitude, limite) {
+    try {
+        let sql = `select
+                        i.id,
+                        i.nome,
+                        i.foto,
+                        e.logradouro,
+                        e.numero,
+                        e.bairro,
+                        e.latitude,
+                        e.longitude,
+                        t.tipo as tipo_coleta,
+                        round(
+                            st_distance_sphere(
+                                point(e.longitude, e.latitude),
+                                point(?, ?)
+                            ) / 1000, 1
+                        ) as distancia_km
+                    from tbl_instituicao i
+                        inner join tbl_endereco e    on e.id = i.id_endereco
+                        inner join tbl_tipo_coleta t on t.id = i.id_coleta
+                    order by distancia_km asc
+                    limit ?`
+
+        // a ordem dos ? é: longitude, latitude, limite
+        let result = await knexConection.raw(sql, [Number(longitude), Number(latitude), Number(limite)])
+
+        // no MySQL o knex.raw devolve [linhas, campos]
+        if (Array.isArray(result[0]))
+            return result[0]
+        else
+            return false
+
+    } catch (error) {
+        console.log(error)
         return false
     }
 }
@@ -188,5 +246,6 @@ module.exports = {
     insertInstituicao,
     updateInstituicao,
     selectAllInstituicoes,
-    selectByIdInstituicao
+    selectByIdInstituicao,
+    selectInstituicoesProximas
 }
