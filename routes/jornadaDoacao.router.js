@@ -30,14 +30,4 @@ router.patch('/:id', bodyParserJson, async function(request, response) {
     response.json(result)
 })
 
-router.post('/:id/documento', bodyParserJson, async function(request, response) {
-    let id = request.params.id
-    let dados = request.body
-    let contentType = request.headers['content-type']
-    let result = await controllerVinculoEtapaDoadora.enviarDocumento(id, dados, contentType)
-
-    response.status(result.status_code)
-    response.json(result)
-})
-
 module.exports = router

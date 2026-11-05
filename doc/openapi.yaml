@@ -256,6 +256,29 @@ paths:
           description: Funcionario not found
         '500':
           description: Error Internal Server (Controller / Model)
+  /v1/materna/funcionario/instituicao/{id}:
+    get:
+      tags:
+      - Funcionário
+      summary: Lista funcionários de uma instituição
+      description: Retorna os funcionários vinculados à instituição informada
+      parameters:
+      - name: id
+        in: path
+        description: ID da instituição
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Funcionários encontrados
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Not Found
+        '500':
+          description: Error Internal Server (Controller / Model)
   /v1/materna/tipo-coleta:
     post:
       tags:
@@ -421,7 +444,7 @@ paths:
       tags:
       - Instituição
       summary: Busca uma instituição pela ID
-      description: Retorna uma instituição pela ID
+      description: Retorna os dados da instituição, suas jornadas e todas as informações das etapas de cada jornada
       parameters:
       - name: id
         in: path
@@ -494,6 +517,29 @@ paths:
           description: Invalid ID supplied
         '404':
           description: Instituicao not found
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/instituicao/proximas:
+    get:
+      tags:
+      - Instituição
+      summary: Busca instituições próximas a um CEP
+      description: Retorna instituições ordenadas pela proximidade do CEP informado
+      parameters:
+      - name: cep
+        in: query
+        description: CEP de referência
+        required: true
+        schema:
+          type: string
+          example: 01246-000
+      responses:
+        '200':
+          description: Instituições próximas encontradas
+        '400':
+          description: CEP inválido ou não localizado
+        '404':
+          description: Not Found
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/campanha:
@@ -656,6 +702,29 @@ paths:
           description: Not Found
         '500':
           description: Error Internal Server (Controller / Model)
+  /v1/materna/jornada/instituicao/{id}:
+    get:
+      tags:
+      - Jornada
+      summary: Lista jornadas de uma instituição
+      description: Retorna as jornadas vinculadas à instituição informada
+      parameters:
+      - name: id
+        in: path
+        description: ID da instituição
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Jornadas encontradas
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Not Found
+        '500':
+          description: Error Internal Server (Controller / Model)
   /v1/materna/jornada/{id}:
     get:
       tags:
@@ -708,6 +777,43 @@ paths:
           description: Successful operation
         '400':
           description: Invalid ID supplied
+        '404':
+          description: Jornada not found
+        '415':
+          description: Invalid Content-Type
+        '500':
+          description: Error Internal Server (Controller / Model)
+    patch:
+      tags:
+      - Jornada
+      summary: Atualiza o status de uma jornada
+      description: Ativa ou desativa uma jornada pelo ID
+      parameters:
+      - name: id
+        in: path
+        description: ID da jornada
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Novo status da jornada
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - is_ativo
+              properties:
+                is_ativo:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Jornada atualizada com sucesso
+        '400':
+          description: Invalid ID or status supplied
         '404':
           description: Jornada not found
         '415':
@@ -1158,7 +1264,7 @@ paths:
           description: Nenhum horário encontrado no período informado
         '500':
           description: Error Internal Server
-  /v1/materna/cadastro-horario:
+  /v1/materna/horario:
     post:
       tags:
       - Cadastro de Horário
@@ -1183,39 +1289,51 @@ paths:
     get:
       tags:
       - Cadastro de Horário
-      summary: Lista os horários cadastrados da agenda
-      description: Retorna os horários cadastrados com etapa, agendamentos vinculados,
-        doadoras e status dos agendamentos
-      parameters:
-      - name: data
-        in: query
-        description: Data dos horários a serem consultados
-        required: false
-        schema:
-          type: string
-          format: date
-          example: '2026-08-25'
-      - name: etapa_id
-        in: query
-        description: ID da etapa agendável
-        required: false
-        schema:
-          type: integer
-          example: 2
+      summary: Lista todos os horários cadastrados
+      description: Retorna os horários registrados no sistema
       responses:
         '200':
-          description: Horários cadastrados encontrados
+          description: Horários encontrados
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/HorarioCadastradoAgenda'
+                  $ref: '#/components/schemas/CadastroHorario'
         '404':
           description: Nenhum horário encontrado
         '500':
           description: Error Internal Server (Controller / Model)
-  /v1/materna/cadastro-horario/{id}:
+  /v1/materna/horario/instituicao/{id}:
+    get:
+      tags:
+      - Cadastro de Horário
+      summary: Lista horários de uma instituição
+      description: Retorna horários vinculados às jornadas da instituição informada
+      parameters:
+      - name: id
+        in: path
+        description: ID da instituição
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Horários encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CadastroHorario'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Not Found
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/horario/{id}:
     get:
       tags:
       - Cadastro de Horário
@@ -1293,6 +1411,229 @@ paths:
           description: Invalid ID supplied
         '404':
           description: CadastroHorario not found
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/vinculo-etapa-doadora:
+    post:
+      tags:
+      - Vínculo Etapa-Doadora
+      summary: Vincula uma doadora a uma etapa
+      description: Cria um vínculo entre a doadora e a etapa informadas
+      requestBody:
+        description: Identificadores da doadora e da etapa
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - id_doadora
+              - id_etapa
+              properties:
+                id_doadora:
+                  type: integer
+                  example: 1
+                id_etapa:
+                  type: integer
+                  example: 1
+      responses:
+        '201':
+          description: Vínculo criado com sucesso
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Doadora ou etapa não encontrada
+        '415':
+          description: Invalid Content-Type
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/vinculo-etapa-doadora/{id}:
+    patch:
+      tags:
+      - Vínculo Etapa-Doadora
+      summary: Atualiza a data de conclusão de um vínculo
+      description: Define ou remove a data de conclusão do vínculo
+      parameters:
+      - name: id
+        in: path
+        description: ID do vínculo etapa-doadora
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Data de conclusão ou null para removê-la
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - data_conclusao
+              properties:
+                data_conclusao:
+                  type: string
+                  format: date
+                  nullable: true
+                  example: '2026-11-05'
+      responses:
+        '200':
+          description: Data de conclusão atualizada
+        '400':
+          description: ID ou data inválida
+        '415':
+          description: Invalid Content-Type
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/documento/{id_jornada_doacao}:
+    post:
+      tags:
+      - Documento da Doadora
+      summary: Envia um documento para a jornada de doação
+      description: Registra ou substitui o documento da jornada e reinicia o status conforme as regras da etapa
+      parameters:
+      - name: id_jornada_doacao
+        in: path
+        description: ID da jornada de doação
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Documento e ID da doadora
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - id_doadora
+              - documento
+              properties:
+                id_doadora:
+                  type: integer
+                  example: 1
+                documento:
+                  type: string
+                  maxLength: 255
+                  example: https://exemplo.com/documento.pdf
+      responses:
+        '201':
+          description: Documento registrado com sucesso
+        '200':
+          description: Documento substituído com sucesso
+        '400':
+          description: ID, documento ou etapa inválida
+        '404':
+          description: Vínculo não encontrado
+        '415':
+          description: Invalid Content-Type
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/documento/jornada/{id_jornada_doacao}:
+    get:
+      tags:
+      - Documento da Doadora
+      summary: Lista os documentos enviados para uma jornada de doação
+      parameters:
+      - name: id_jornada_doacao
+        in: path
+        description: ID da jornada de doação
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Documentos da jornada
+        '400':
+          description: ID da jornada inválido
+        '404':
+          description: Nenhum documento encontrado
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/documento/instituicao/{id_instituicao}:
+    get:
+      tags:
+      - Documento da Doadora
+      summary: Lista os documentos enviados às jornadas de uma instituição
+      parameters:
+      - name: id_instituicao
+        in: path
+        description: ID da instituição
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Documentos da instituição
+        '400':
+          description: ID da instituição inválido
+        '404':
+          description: Nenhum documento encontrado
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/documento/{id_documento}/aceitar:
+    patch:
+      tags:
+      - Documento da Doadora
+      summary: Aceita um documento pendente
+      description: Aceita um documento quando a etapa exige aprovação
+      parameters:
+      - name: id_documento
+        in: path
+        description: ID do documento da doadora
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Documento aceito com sucesso
+        '400':
+          description: ID inválido, documento não pendente ou etapa sem aprovação
+        '404':
+          description: Documento não encontrado
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/documento/{id_documento}/recusar:
+    patch:
+      tags:
+      - Documento da Doadora
+      summary: Recusa um documento da doadora
+      description: Recusa um documento pendente e registra o motivo
+      parameters:
+      - name: id_documento
+        in: path
+        description: ID do documento da doadora
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Motivo obrigatório da recusa
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - motivo_recusa
+              properties:
+                motivo_recusa:
+                  type: string
+                  maxLength: 255
+                  example: Documento ilegível; envie uma nova imagem.
+      responses:
+        '200':
+          description: Documento recusado com sucesso
+        '400':
+          description: ID, motivo ou situação do documento inválida
+        '404':
+          description: Documento não encontrado
+        '415':
+          description: Invalid Content-Type
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/status-agendamento:
@@ -1442,16 +1783,7 @@ paths:
       tags:
       - Agendamento
       summary: Lista os atendimentos da agenda
-      description: Retorna os atendimentos com horário, doadora, etapa e status
-      parameters:
-      - name: data
-        in: query
-        description: Data dos atendimentos a serem consultados
-        required: false
-        schema:
-          type: string
-          format: date
-          example: '2026-08-25'
+      description: Retorna todos os agendamentos com horário, doadora, etapa e status
       responses:
         '200':
           description: Atendimentos encontrados
@@ -1463,6 +1795,29 @@ paths:
                   $ref: '#/components/schemas/AtendimentoAgenda'
         '404':
           description: Nenhum atendimento encontrado
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/agendamento/doadora/{id}:
+    get:
+      tags:
+      - Agendamento
+      summary: Lista os agendamentos de uma doadora
+      description: Retorna os agendamentos vinculados à doadora informada
+      parameters:
+      - name: id
+        in: path
+        description: ID da doadora
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Agendamentos encontrados
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Nenhum agendamento encontrado para a doadora
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/agendamento/{id}:
@@ -1495,8 +1850,8 @@ paths:
     put:
       tags:
       - Agendamento
-      summary: Atualiza um agendamento pelo ID
-      description: Buscar e atualizar um agendamento pelo ID
+      summary: Atualiza o status de um agendamento
+      description: Atualiza o status de um agendamento pendente pelo ID
       parameters:
       - name: id
         in: path
@@ -1506,12 +1861,19 @@ paths:
           type: integer
           format: int64
       requestBody:
-        description: Dados para atualizar um agendamento
+        description: Novo status do agendamento
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Agendamento'
+              type: object
+              required:
+              - id_status_agendamento
+              properties:
+                id_status_agendamento:
+                  type: integer
+                  enum: [2, 3]
+                  description: 2 para aceitar ou 3 para recusar
       responses:
         '200':
           description: Successful operation
@@ -2496,24 +2858,40 @@ components:
       type: object
       required:
       - documento
-      - tbl_doadora_id
-      - tbl_etapa_ciclo_id
+      - id_doadora
+      - id_jornada_doacao
       properties:
-        id:
+        id_documento:
           type: integer
           example: 1
         documento:
           type: string
           example: https://exemplo.com/doc.pdf
-        tbl_doadora_id:
-          type: integer
-          example: 1
-        tbl_etapa_ciclo_id:
-          type: integer
-          example: 1
         motivo_recusa:
           type: string
           example: Documento ilegível
+        id_status_documento:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum:
+          - Pendente
+          - Aceito
+          - Recusado
+          example: Pendente
+        id_jornada_doacao:
+          type: integer
+          example: 1
+        id_doadora:
+          type: integer
+          example: 1
+        id_etapa:
+          type: integer
+          example: 2
+        etapa:
+          type: string
+          example: Envio de documentos
     AgendamentoDoadora:
       type: object
       properties:

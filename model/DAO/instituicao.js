@@ -169,10 +169,17 @@ const selectByIdInstituicao = async function (id) {
                                'descricao', jor.descricao,
                                'is_ativo',  jor.is_ativo,
                                'etapas', (select json_arrayagg(json_object(
-                                                      'id',        eta.id,
-                                                      'titulo',    eta.titulo,
-                                                      'descricao', eta.descricao,
-                                                      'ordem',     eta.ordem))
+                                                      'id',                     eta.id,
+                                                      'titulo',                 eta.titulo,
+                                                      'descricao',              eta.descricao,
+                                                      'ordem',                  eta.ordem,
+                                                      'documento',              eta.documento,
+                                                      'is_repetivel',           eta.is_repetivel,
+                                                      'is_agendavel',           eta.is_agendavel,
+                                                      'is_obrigatorio',         eta.is_obrigatorio,
+                                                      'is_solicita_arquivo',    eta.is_solicita_arquivo,
+                                                      'is_precisa_aprovacao',   eta.is_precisa_aprovacao,
+                                                      'id_jornada',             eta.id_jornada))
                                           from tbl_etapa as eta
                                           where eta.id_jornada = jor.id)))
                     from tbl_jornada as jor
