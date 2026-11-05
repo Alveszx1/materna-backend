@@ -430,71 +430,52 @@ DELIMITER ;
 
 DROP PROCEDURE IF EXISTS procaceitardocumentodoadora;
 DROP PROCEDURE IF EXISTS procrecusardocumentodoadora;
-DROP PROCEDURE IF EXISTS procatualizardocumentodoadora;
 
 DELIMITER $$
 
-CREATE PROCEDURE procatualizardocumentodoadora (
-    IN p_id_documento INT,
-    IN p_id_status_documento INT,
-    IN p_motivo_recusa VARCHAR(255)
+CREATE PROCEDURE procaceitardocumentodoadora (
+    IN p_id_documento INT
 )
 BEGIN
-    DECLARE v_id_status_atual INT DEFAULT NULL;
-    DECLARE v_precisa_aprovacao BOOLEAN DEFAULT NULL;
-
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    IF p_id_status_documento NOT IN (2, 3) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'O status deve ser Aceito ou Recusado.';
-    END IF;
-
-    IF p_id_status_documento = 3 AND
-       (p_motivo_recusa IS NULL OR TRIM(p_motivo_recusa) = '') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'O motivo da recusa e obrigatorio.';
-    END IF;
-
-    START TRANSACTION;
-
-    SELECT documento.id_status_documento, etapa.is_precisa_aprovacao
-    INTO v_id_status_atual, v_precisa_aprovacao
-    FROM tbl_documento_doadora AS documento
-    INNER JOIN tbl_jornada_doacao AS jornada_doacao
-        ON jornada_doacao.id = documento.id_jornada_doacao
-    INNER JOIN tbl_etapa AS etapa
-        ON etapa.id = jornada_doacao.id_etapa
-    WHERE documento.id = p_id_documento
-    FOR UPDATE;
-
-    IF v_id_status_atual IS NULL THEN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM tbl_documento_doadora
+        WHERE id = p_id_documento
+    ) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Documento nao encontrado.';
     END IF;
 
-    IF v_precisa_aprovacao = FALSE THEN
+    UPDATE tbl_documento_doadora
+    SET id_status_documento = 2,
+        motivo_recusa = ''
+    WHERE id = p_id_documento;
+END$$
+
+CREATE PROCEDURE procrecusardocumentodoadora (
+    IN p_id_documento INT,
+    IN p_motivo_recusa VARCHAR(255)
+)
+BEGIN
+    IF p_motivo_recusa IS NULL OR TRIM(p_motivo_recusa) = '' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Esta etapa nao exige aprovacao de documento.';
+        SET MESSAGE_TEXT = 'O motivo da recusa e obrigatorio.';
     END IF;
 
-    IF v_id_status_atual <> 1 THEN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM tbl_documento_doadora
+        WHERE id = p_id_documento
+    ) THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Somente documentos pendentes podem ser atualizados.';
+        SET MESSAGE_TEXT = 'Documento nao encontrado.';
     END IF;
 
     UPDATE tbl_documento_doadora
-    SET id_status_documento = p_id_status_documento,
-        motivo_recusa = IF(p_id_status_documento = 3, TRIM(p_motivo_recusa), '')
+    SET id_status_documento = 3,
+        motivo_recusa = TRIM(p_motivo_recusa)
     WHERE id = p_id_documento;
-
-    COMMIT;
 END$$
 
 DELIMITER ;
 ############################################################################################
-

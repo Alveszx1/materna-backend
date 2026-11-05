@@ -1490,7 +1490,7 @@ paths:
       tags:
       - Documento da Doadora
       summary: Envia um documento para a jornada de doação
-      description: Registra ou substitui o documento da jornada e reinicia o status conforme as regras da etapa
+      description: Registra o documento como pendente se a etapa exige aprovação; caso contrário, como aceito
       parameters:
       - name: id_jornada_doacao
         in: path
@@ -1520,81 +1520,12 @@ paths:
       responses:
         '201':
           description: Documento registrado com sucesso
-        '200':
-          description: Documento substituído com sucesso
         '400':
-          description: ID, documento ou etapa inválida
+          description: ID ou documento inválido
         '404':
           description: Vínculo não encontrado
         '415':
           description: Invalid Content-Type
-        '500':
-          description: Error Internal Server (Controller / Model)
-  /v1/materna/documento/jornada/{id_jornada_doacao}:
-    get:
-      tags:
-      - Documento da Doadora
-      summary: Lista os documentos enviados para uma jornada de doação
-      parameters:
-      - name: id_jornada_doacao
-        in: path
-        description: ID da jornada de doação
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        '200':
-          description: Documentos da jornada
-        '400':
-          description: ID da jornada inválido
-        '404':
-          description: Nenhum documento encontrado
-        '500':
-          description: Error Internal Server (Controller / Model)
-  /v1/materna/documento/instituicao/{id_instituicao}:
-    get:
-      tags:
-      - Documento da Doadora
-      summary: Lista os documentos enviados às jornadas de uma instituição
-      parameters:
-      - name: id_instituicao
-        in: path
-        description: ID da instituição
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        '200':
-          description: Documentos da instituição
-        '400':
-          description: ID da instituição inválido
-        '404':
-          description: Nenhum documento encontrado
-        '500':
-          description: Error Internal Server (Controller / Model)
-  /v1/materna/documento/{id_documento}/aceitar:
-    patch:
-      tags:
-      - Documento da Doadora
-      summary: Aceita um documento pendente
-      description: Aceita um documento quando a etapa exige aprovação
-      parameters:
-      - name: id_documento
-        in: path
-        description: ID do documento da doadora
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        '200':
-          description: Documento aceito com sucesso
-        '400':
-          description: ID inválido, documento não pendente ou etapa sem aprovação
-        '404':
-          description: Documento não encontrado
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/documento/{id_documento}/recusar:
@@ -1602,7 +1533,7 @@ paths:
       tags:
       - Documento da Doadora
       summary: Recusa um documento da doadora
-      description: Recusa um documento pendente e registra o motivo
+      description: Recusa o documento e registra o motivo
       parameters:
       - name: id_documento
         in: path
@@ -1629,11 +1560,33 @@ paths:
         '200':
           description: Documento recusado com sucesso
         '400':
-          description: ID, motivo ou situação do documento inválida
+          description: ID ou motivo inválido
         '404':
           description: Documento não encontrado
         '415':
           description: Invalid Content-Type
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/documento/{id_documento}/aceitar:
+    patch:
+      tags:
+      - Documento da Doadora
+      summary: Aceita um documento
+      parameters:
+      - name: id_documento
+        in: path
+        description: ID do documento da doadora
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Documento aceito com sucesso
+        '400':
+          description: ID inválido
+        '404':
+          description: Documento não encontrado
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/status-agendamento:
@@ -2870,16 +2823,6 @@ components:
         motivo_recusa:
           type: string
           example: Documento ilegível
-        id_status_documento:
-          type: integer
-          example: 1
-        status:
-          type: string
-          enum:
-          - Pendente
-          - Aceito
-          - Recusado
-          example: Pendente
         id_jornada_doacao:
           type: integer
           example: 1

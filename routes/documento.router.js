@@ -5,24 +5,6 @@ const controllerDocumento = require('../controller/documento/controller_document
 const router = express.Router()
 const bodyParserJson = bodyParser.json()
 
-router.get('/jornada/:id_jornada_doacao', async function(request, response) {
-    let result = await controllerDocumento.listarDocumentosPorJornadaDoacao(
-        request.params.id_jornada_doacao
-    )
-
-    response.status(result.status_code)
-    response.json(result)
-})
-
-router.get('/instituicao/:id_instituicao', async function(request, response) {
-    let result = await controllerDocumento.listarDocumentosPorInstituicao(
-        request.params.id_instituicao
-    )
-
-    response.status(result.status_code)
-    response.json(result)
-})
-
 router.post('/:id_jornada_doacao', bodyParserJson, async function(request, response) {
     let id = request.params.id_jornada_doacao
     let dados = request.body
@@ -34,9 +16,7 @@ router.post('/:id_jornada_doacao', bodyParserJson, async function(request, respo
 })
 
 router.patch('/:id_documento/aceitar', async function(request, response) {
-    let result = await controllerDocumento.aceitarDocumento(
-        request.params.id_documento
-    )
+    let result = await controllerDocumento.aceitarDocumento(request.params.id_documento)
 
     response.status(result.status_code)
     response.json(result)

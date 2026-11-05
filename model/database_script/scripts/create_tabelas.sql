@@ -324,6 +324,11 @@ create table tbl_status_agendamento(
     status 		    varchar (25)            not null
 );
 
+create table tbl_status_documento_doadora(
+    id                  int                     not null primary key auto_increment,
+    status              varchar(25)             not null
+);
+
 
 #CRIAÇÃO DA TABELA agendamento
 create table tbl_agendamento(
@@ -359,6 +364,7 @@ create table tbl_documento_doadora(
 	id 			            int                     not null primary key auto_increment,
     documento		        varchar(255)             not null,
     motivo_recusa		    varchar(255)             not null,
+    id_status_documento     int                     not null default 1,
     
     id_jornada_doacao       int                     not null,
     id_doadora              int                     not null,
@@ -373,6 +379,10 @@ create table tbl_documento_doadora(
      #fazer relacao entre duas tabelas 
     constraint			FK_DOADORA_DOCUMENTODOADORA       # nome do relacionamento
     foreign key			(id_doadora)    		  # quem sera a FK natabla FK(foren key)
-    references			tbl_doadora(id)		  # de onde vem a FK
+    references			tbl_doadora(id),		  # de onde vem a FK
+
+    constraint            FK_STATUS_DOCUMENTO_DOCUMENTODOADORA
+    foreign key            (id_status_documento)
+    references            tbl_status_documento_doadora(id)
 
 );
