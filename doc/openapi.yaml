@@ -1304,6 +1304,18 @@ paths:
           description: Nenhum horário encontrado
         '500':
           description: Error Internal Server (Controller / Model)
+  /v1/materna/horario/agenda:
+    get:
+      tags:
+      - Cadastro de Horário
+      summary: Lista os horários da view vw_horarios
+      responses:
+        '200':
+          description: Horários encontrados
+        '404':
+          description: Nenhum horário encontrado
+        '500':
+          description: Error Internal Server (Controller / Model)
   /v1/materna/horario/instituicao/{id}:
     get:
       tags:

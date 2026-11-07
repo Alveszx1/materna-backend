@@ -155,6 +155,34 @@ const selectHorariosByEtapa = async function (idEtapa) {
     }
 }
 
+const selectHorariosAgenda = async function (filtros) {
+    try {
+        let condicoes = []
+
+        if (filtros.is_proximo === "true")
+            condicoes.push("is_proximo = true")
+
+        if (filtros.id_doadora === "null")
+            condicoes.push("id_doadora IS NULL")
+
+        let sql = "SELECT * FROM vw_horarios"
+
+        if (condicoes.length > 0)
+            sql += ` WHERE ${condicoes.join(" AND ")}`
+
+        sql += " ORDER BY data, hora"
+        let result = await knexConection.raw(sql)
+
+        if (Array.isArray(result))
+            return result[0]
+        else
+            return false
+
+    } catch (error) {
+        return false
+    }
+}
+
 
 const deleteHorario = async function(id){
     try {
@@ -175,6 +203,7 @@ module.exports = {
     selectAllHorarios,
     selectByIdHorario,
     selectHorariosByEtapa,
+    selectHorariosAgenda,
     updateHorario,
     selectHorariosByInstituicao,
     deleteHorario

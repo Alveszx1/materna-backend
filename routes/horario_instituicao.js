@@ -41,6 +41,15 @@ router.get('/instituicao/:id', async function(request, response) {
     response.json(result)
 })
 
+// Listar os horários da agenda
+router.get('/agenda', async function(request, response) {
+
+    let result = await controllerHorario.listarHorariosAgenda(request.query)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 // Buscar um horário pelo ID
 router.get('/:id', async function(request, response) {
 
