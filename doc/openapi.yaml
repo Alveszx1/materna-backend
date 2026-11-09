@@ -1756,9 +1756,9 @@ paths:
       tags:
       - Agendamento
       summary: Adiciona um novo agendamento
-      description: Endpoint para enviar os dados de um agendamento a ser cadastrado
+      description: Cria um novo agendamento para um horário disponível. O novo registro deve usar o status Pendente (1). Um agendamento recusado permanece no histórico e não pode ser reativado; para usar novamente o horário, crie outro agendamento.
       requestBody:
-        description: JSON contendo os dados de um agendamento
+        description: Dados do horário, da jornada de doação e do status inicial do agendamento
         required: true
         content:
           application/json:
@@ -1767,8 +1767,39 @@ paths:
       responses:
         '201':
           description: Agendamento cadastrado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  status_code:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: Item inserido com sucesso
+                  response:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 10
+                      id_cadastro_horario:
+                        type: integer
+                        example: 3
+                      id_jornada_doacao:
+                        type: integer
+                        example: 5
+                      id_status_agendamento:
+                        type: integer
+                        example: 1
         '400':
-          description: Invalid input
+          description: Dados inválidos, etapa sem permissão para agendamento ou horário indisponível
+        '404':
+          description: Jornada de doação ou horário não encontrado
         '415':
           description: Invalid Content-Type
         '500':
@@ -1784,9 +1815,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AtendimentoAgenda'
+                $ref: '#/components/schemas/AgendamentosResponse'
         '404':
           description: Nenhum atendimento encontrado
         '500':
@@ -1808,44 +1837,22 @@ paths:
       responses:
         '200':
           description: Agendamentos encontrados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgendamentosResponse'
         '400':
-          description: Invalid ID supplied
+          description: ID da doadora inválido
         '404':
           description: Nenhum agendamento encontrado para a doadora
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/agendamento/{id}:
-    get:
-      tags:
-      - Agendamento
-      summary: Busca um agendamento pelo ID
-      description: Retorna um agendamento pelo ID
-      parameters:
-      - name: id
-        in: path
-        description: ID do agendamento
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Agendamento'
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Not Found
-        '500':
-          description: Error Internal Server (Controller / Model)
     put:
       tags:
       - Agendamento
       summary: Atualiza o status de um agendamento
-      description: Aceita ou recusa agendamentos pendentes; a doadora proprietária também pode cancelar um agendamento pendente ou aceito.
+      description: "Aceitar (2) ou recusar (3) só é permitido para agendamentos pendentes. Ao aceitar, o horário fica indisponível; ao recusar, permanece disponível. O registro recusado continua no histórico e não pode ser aceito depois; para usar o horário novamente, crie outro pela rota POST /v1/materna/agendamento. A doadora proprietária pode cancelar (4) um agendamento pendente ou aceito; se aceito, o horário volta a ficar disponível."
       parameters:
       - name: id
         in: path
@@ -1861,48 +1868,80 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-              - id_status_agendamento
-              properties:
-                id_status_agendamento:
-                  type: integer
-                  enum: [2, 3, 4]
-                  description: 2 para aceitar, 3 para recusar ou 4 para cancelar
-                id_doadora:
-                  type: integer
-                  description: Obrigatório somente quando id_status_agendamento for 4
-                  example: 1
+              oneOf:
+              - type: object
+                required:
+                - id_status_agendamento
+                properties:
+                  id_status_agendamento:
+                    type: integer
+                    enum: [2, 3]
+                    description: 2 para aceitar ou 3 para recusar um agendamento pendente
+              - type: object
+                required:
+                - id_status_agendamento
+                - id_doadora
+                properties:
+                  id_status_agendamento:
+                    type: integer
+                    enum: [4]
+                    description: 4 para cancelar um agendamento próprio pendente ou aceito
+                  id_doadora:
+                    type: integer
+                    minimum: 1
+                    description: ID da doadora proprietária do agendamento
+                    example: 1
+            examples:
+              aceitar:
+                summary: Aceitar um agendamento pendente
+                value:
+                  id_status_agendamento: 2
+              recusar:
+                summary: Recusar um agendamento pendente
+                value:
+                  id_status_agendamento: 3
+              cancelar:
+                summary: Cancelar um agendamento próprio
+                value:
+                  id_status_agendamento: 4
+                  id_doadora: 1
       responses:
         '200':
-          description: Successful operation
+          description: Status do agendamento atualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  status_code:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Item atualizado com sucesso!
+                  response:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 10
+                      id_status_agendamento:
+                        type: integer
+                        enum: [2, 3, 4]
+                        example: 2
+                      id_doadora:
+                        type: integer
+                        description: Retornado quando o status é Cancelado
+                        example: 1
         '400':
-          description: Invalid ID supplied
+          description: ID ou status inválido, transição não permitida ou id_doadora inválido para cancelamento
         '404':
-          description: Agendamento not found
+          description: Agendamento não encontrado
         '415':
           description: Invalid Content-Type
-        '500':
-          description: Error Internal Server (Controller / Model)
-    delete:
-      tags:
-      - Agendamento
-      summary: Deletar um agendamento existente
-      description: Excluir um agendamento
-      parameters:
-      - name: id
-        in: path
-        description: ID do agendamento
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        '200':
-          description: Successful operation
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Agendamento not found
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/documento-instituicao:
@@ -2176,34 +2215,6 @@ paths:
           description: IDs inválidos ou dados inválidos
         '404':
           description: Doadora ou jornada não encontrada
-        '500':
-          description: Error Internal Server
-  /v1/materna/doadora/{doadora_id}/agendamentos:
-    get:
-      tags:
-      - Agendamento
-      summary: Lista os agendamentos de uma doadora
-      description: Retorna os agendamentos vinculados à doadora, incluindo data, horário,
-        etapa e status.
-      parameters:
-      - name: doadora_id
-        in: path
-        description: ID da doadora
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        '200':
-          description: Agendamentos encontrados
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AgendamentoDoadora'
-        '404':
-          description: Nenhum agendamento encontrado para a doadora
         '500':
           description: Error Internal Server
   /v1/materna/doadora/{doadora_id}/doacoes-realizadas:
@@ -2787,56 +2798,131 @@ components:
           example: 1
         status:
           type: string
-          example: Confirmado
+          enum: [Pendente, Aceito, Recusado, Cancelado]
+          example: Pendente
     Agendamento:
       type: object
       required:
-      - tbl_cadastro_horario_id
-      - tbl_ciclo_id
-      - tbl_status_agendamento_id
+      - id_cadastro_horario
+      - id_jornada_doacao
+      - id_status_agendamento
       properties:
-        id:
+        id_cadastro_horario:
           type: integer
-          example: 1
-        tbl_cadastro_horario_id:
+          minimum: 1
+          description: ID de um horário cadastrado e disponível
+          example: 3
+        id_jornada_doacao:
           type: integer
-          example: 1
-        tbl_ciclo_id:
+          minimum: 1
+          description: ID do vínculo da doadora com a etapa da jornada
+          example: 5
+        id_status_agendamento:
           type: integer
-          example: 1
-        tbl_status_agendamento_id:
-          type: integer
+          minimum: 1
+          description: Use 1 (Pendente) para solicitar um novo agendamento
           example: 1
     AtendimentoAgenda:
       type: object
+      required:
+      - id_agendamento
+      - data_agendamento
+      - horario
+      - nome_doadora
+      - tipo_atendimento
+      - status_agendamento
       properties:
         id_agendamento:
           type: integer
           example: 10
+        data_agendamento:
+          type: string
+          format: date
+          example: '2026-11-10'
         horario:
           type: string
-          example: 09:00:00
-        doadora:
-          type: object
-          properties:
-            id:
-              type: integer
-              example: 1
-            nome:
-              type: string
-              example: Ana Souza
-        etapa:
-          type: object
-          properties:
-            id:
-              type: integer
-              example: 2
-            titulo:
-              type: string
-              example: Coleta
-        status:
+          format: time
+          example: '09:00:00'
+        nome_doadora:
           type: string
-          example: Confirmado
+          example: Ana Souza
+        tipo_atendimento:
+          type: string
+          example: Coleta
+        status_agendamento:
+          type: string
+          enum: [Pendente, Aceito, Recusado, Cancelado]
+          example: Pendente
+        id_instituicao:
+          type: integer
+          example: 1
+        nome_instituicao:
+          type: string
+          example: Banco de Leite Humano
+        logradouro:
+          type: string
+          example: Rua das Flores
+        numero:
+          type: string
+          example: '123'
+        complemento:
+          type: string
+          nullable: true
+          example: Sala 2
+        bairro:
+          type: string
+          example: Centro
+        cep:
+          type: string
+          example: '12345-678'
+        cidade:
+          type: string
+          example: São Paulo
+        sigla_estado:
+          type: string
+          example: SP
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          example: -23.5505
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          example: -46.6333
+        telefone_instituicao:
+          type: string
+          nullable: true
+          example: '+5511999999999'
+    AgendamentosResponse:
+      type: object
+      properties:
+        api_description:
+          type: string
+          example: API para controlar o projeto Materna
+        development:
+          type: string
+          example: Bruno Haddad Alves
+        version:
+          type: string
+          example: 1.0.4.26
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        count:
+          type: integer
+          example: 1
+        response:
+          type: object
+          properties:
+            agendamento:
+              type: array
+              items:
+                $ref: '#/components/schemas/AtendimentoAgenda'
     DocumentoInstituicao:
       type: object
       required:
@@ -2880,41 +2966,6 @@ components:
         etapa:
           type: string
           example: Envio de documentos
-    AgendamentoDoadora:
-      type: object
-      properties:
-        id_agendamento:
-          type: integer
-          example: 10
-        dia:
-          type: string
-          format: date
-          example: '2026-08-25'
-        horario:
-          type: string
-          format: time
-          example: '14:00:00'
-        instituicao:
-          type: object
-          properties:
-            id:
-              type: integer
-              example: 1
-            nome:
-              type: string
-              example: Banco de Leite Humano
-        etapa:
-          type: object
-          properties:
-            id:
-              type: integer
-              example: 2
-            titulo:
-              type: string
-              example: Coleta
-        status:
-          type: string
-          example: Confirmado
     DoacaoRealizada:
       type: object
       properties:
