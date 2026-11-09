@@ -19,7 +19,7 @@ const knexConection = knex(knexDatabaseConfig.development);
 
 
 // Função para inserir uma nova doadora no banco de dados
-    const insertDoadora = async function (doadora) {
+    const insertDoadora = async function (doadora, codigoOtp) {
 
         try {
 
@@ -28,7 +28,7 @@ const knexConection = knex(knexDatabaseConfig.development);
                 ?, ?, ?, ?, ?, ?, ?,
                 ?,
                 ?, ?, ?, ?, ?, ?, ?,
-                ?, ?
+                ?, ?, ?
             )
         `;
 
@@ -52,7 +52,8 @@ const knexConection = knex(knexDatabaseConfig.development);
             doadora.longitude,
 
             doadora.cidade,
-            doadora.sigla_estado
+            doadora.sigla_estado,
+            codigoOtp
         ];
 
         const [resultado] = await knexConection.raw(sql, valores);

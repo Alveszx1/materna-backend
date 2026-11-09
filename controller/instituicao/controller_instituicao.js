@@ -1,6 +1,6 @@
 const configMessages = require("../module/configMessage.js")
 const instituicaoDAO = require("../../model/DAO/instituicao.js")
-const coordenadas = require("../module/coordenadas.js")
+const coordenadas = require("../../service/coordenadasService.js")
 const bcrypt = require("bcrypt")
 
 

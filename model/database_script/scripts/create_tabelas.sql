@@ -386,3 +386,15 @@ create table tbl_documento_doadora(
     references            tbl_status_documento_doadora(id)
 
 );
+
+create table tbl_codigo_envio(
+    id                    int                     not null primary key auto_increment,
+    codigo                int                     not null,
+    data_criacao          datetime                not null,
+
+    id_doadora            int                     not null,
+
+    constraint            FK_DOADORA_CODIGOENVIO
+    foreign key           (id_doadora)
+    references            tbl_doadora(id)
+);

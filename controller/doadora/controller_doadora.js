@@ -10,9 +10,10 @@ const configMessages = require("../module/configMessage.js")
 
 const doadoraDAO = require("../../model/DAO/doadora.js")
 
-const coordenadas = require("../module/coordenadas.js")
+const coordenadas = require("../../service/coordenadasService.js")
 
 const bcrypt = require("bcrypt")
+const otpService = require("../../service/otpService.js")
 
 const validarDados = async function (doadora) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
@@ -118,7 +119,11 @@ const inserirNovaDoadora = async function (doadora, contentType) {
                 doadora.senha = await bcrypt.hash(doadora.senha, doadora.sal)
                 
 
-                let result = await doadoraDAO.insertDoadora(await tratarDados(doadora))
+                const codigoOtp = otpService.generateOtp()
+                let result = await doadoraDAO.insertDoadora(
+                    await tratarDados(doadora),
+                    codigoOtp
+                )
 
 
                 if (result) {

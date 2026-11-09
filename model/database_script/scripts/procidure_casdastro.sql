@@ -27,7 +27,10 @@ CREATE PROCEDURE proccadastrardoadora (
 
     # Cidade e Estado
     IN p_cidade           VARCHAR(100),
-    IN p_sigla_estado     VARCHAR(3)
+    IN p_sigla_estado     VARCHAR(3),
+
+    # Código de envio
+    IN p_codigo           INT
 )
 BEGIN
     DECLARE v_id_estado    INT;
@@ -86,6 +89,10 @@ BEGIN
     VALUES
         (p_nome, p_cpf, p_foto, p_data_nascimento, p_email, p_senha, p_sal, v_id_endereco, v_id_telefone);
     SET v_id_doadora = LAST_INSERT_ID();   -- NOVO
+
+    # CODIGO DE ENVIO (data e hora atuais)
+    INSERT INTO tbl_codigo_envio (codigo, data_criacao, id_doadora)
+    VALUES (p_codigo, NOW(), v_id_doadora);
 
     COMMIT;
 
@@ -666,6 +673,5 @@ END$$
 
 DELIMITER ;
 ##############################################################################################################
-
 
 
