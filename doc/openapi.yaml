@@ -1430,9 +1430,9 @@ paths:
       tags:
       - Vínculo Etapa-Doadora
       summary: Vincula uma doadora a uma etapa
-      description: Cria um vínculo entre a doadora e a etapa informadas
+      description: Cria um vínculo entre a doadora, a etapa, a instituição e a jornada informadas
       requestBody:
-        description: Identificadores da doadora e da etapa
+        description: Identificadores da doadora, da etapa, da instituição e da jornada
         required: true
         content:
           application/json:
@@ -1441,6 +1441,8 @@ paths:
               required:
               - id_doadora
               - id_etapa
+              - id_instituicao
+              - id_jornada
               properties:
                 id_doadora:
                   type: integer
@@ -1448,13 +1450,40 @@ paths:
                 id_etapa:
                   type: integer
                   example: 1
+                id_instituicao:
+                  type: integer
+                  example: 1
+                id_jornada:
+                  type: integer
+                  example: 1
       responses:
         '201':
           description: Vínculo criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_doadora:
+                    type: integer
+                    example: 1
+                  id_etapa:
+                    type: integer
+                    example: 1
+                  id_instituicao:
+                    type: integer
+                    example: 1
+                  id_jornada:
+                    type: integer
+                    example: 1
+                  id:
+                    type: integer
+                    description: ID gerado para o vínculo da jornada de doação
+                    example: 10
         '400':
           description: Dados inválidos
         '404':
-          description: Doadora ou etapa não encontrada
+          description: Doadora, etapa, instituição ou jornada não encontrada
         '415':
           description: Invalid Content-Type
         '500':
@@ -1816,7 +1845,7 @@ paths:
       tags:
       - Agendamento
       summary: Atualiza o status de um agendamento
-      description: Atualiza o status de um agendamento pendente pelo ID
+      description: Aceita ou recusa agendamentos pendentes; a doadora proprietária também pode cancelar um agendamento pendente ou aceito.
       parameters:
       - name: id
         in: path
@@ -1837,8 +1866,12 @@ paths:
               properties:
                 id_status_agendamento:
                   type: integer
-                  enum: [2, 3]
-                  description: 2 para aceitar ou 3 para recusar
+                  enum: [2, 3, 4]
+                  description: 2 para aceitar, 3 para recusar ou 4 para cancelar
+                id_doadora:
+                  type: integer
+                  description: Obrigatório somente quando id_status_agendamento for 4
+                  example: 1
       responses:
         '200':
           description: Successful operation

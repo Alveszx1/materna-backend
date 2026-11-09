@@ -103,13 +103,24 @@ const atualizarAgendamento = async function (id, dados, contentType) {
                 customMessage.ERROR_BAD_REQUEST.field = "[ID] INVÁLIDO (deve ser um número inteiro maior que 0)"
                 return customMessage.ERROR_BAD_REQUEST
 
-            } else if (dados == undefined || dados == null || !Number.isInteger(dados.id_status_agendamento) || dados.id_status_agendamento <= 0) {
-                customMessage.ERROR_BAD_REQUEST.field = "[ID_STATUS_AGENDAMENTO] INVÁLIDO (deve ser um número inteiro maior que 0)"
+            } else if (dados == undefined || dados == null ||
+                !Number.isInteger(dados.id_status_agendamento) ||
+                ![2, 3, 4].includes(dados.id_status_agendamento)) {
+                customMessage.ERROR_BAD_REQUEST.field = "[ID_STATUS_AGENDAMENTO] INVÁLIDO (use 2 para aceitar, 3 para recusar ou 4 para cancelar)"
+                return customMessage.ERROR_BAD_REQUEST
+
+            } else if (dados.id_status_agendamento == 4 &&
+                (!Number.isInteger(dados.id_doadora) || dados.id_doadora <= 0)) {
+                customMessage.ERROR_BAD_REQUEST.field = "[ID_DOADORA] INVÁLIDO (obrigatório para cancelar o agendamento)"
                 return customMessage.ERROR_BAD_REQUEST
 
             } else {
 
-                let result = await agendamentoDAO.updateAgendamento(id, dados.id_status_agendamento)
+                let result = await agendamentoDAO.updateAgendamento(
+                    id,
+                    dados.id_status_agendamento,
+                    dados.id_status_agendamento == 4 ? dados.id_doadora : null
+                )
 
                 if (result && result.erro) {
 
@@ -131,8 +142,14 @@ const atualizarAgendamento = async function (id, dados, contentType) {
 
                     customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
                     customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
-                    customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_UPDATE_ITEM.message
-                    customMessage.DEFAULT_MESSAGE.response = { id: id, ...dados }
+                    customMessage.DEFAULT_MESSAGE.message = dados.id_status_agendamento == 4
+                        ? "Agendamento cancelado com sucesso"
+                        : customMessage.SUCCESS_UPDATE_ITEM.message
+                    customMessage.DEFAULT_MESSAGE.response = {
+                        id,
+                        id_status_agendamento: dados.id_status_agendamento,
+                        ...(dados.id_status_agendamento == 4 ? { id_doadora: dados.id_doadora } : {})
+                    }
 
                     return customMessage.DEFAULT_MESSAGE
 

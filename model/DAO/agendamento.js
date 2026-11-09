@@ -39,9 +39,13 @@ const insertAgendamento = async function (agendamento) {
     }
 }
 
-const updateAgendamento = async function (idAgendamento, idStatus) {
+const updateAgendamento = async function (idAgendamento, idStatus, idDoadora = null) {
     try {
-        await knexConection.raw("CALL procatualizaragendamento(?, ?)", [idAgendamento, idStatus])
+        await knexConection.raw("CALL procatualizaragendamento(?, ?, ?)", [
+            idAgendamento,
+            idStatus,
+            idDoadora
+        ])
 
         return true
 

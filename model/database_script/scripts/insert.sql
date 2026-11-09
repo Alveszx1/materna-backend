@@ -4,7 +4,8 @@
 INSERT INTO tbl_status_agendamento (status) VALUES
 ('Pendente'),
 ('Aceito'),
-('Recusado');
+('Recusado'),
+('Cancelado');
 
 INSERT INTO tbl_status_documento_doadora (id, status) VALUES
 (1, 'Pendente'),
