@@ -37,4 +37,21 @@ router.patch('/:id', bodyParserJson, async function(request, response) {
     response.json(result)
 })
 
+router.patch('/:id/ciclos', bodyParserJson, async function(request, response) {
+    let id = request.params.id
+    let dados = request.body
+    let contentType = request.headers['content-type']
+    let result = await controllerVinculoEtapaDoadora.definirQuantidadeCiclos(id, dados, contentType)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
+router.patch('/:id/concluir', async function(request, response) {
+    let result = await controllerVinculoEtapaDoadora.concluirCiclo(request.params.id)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 module.exports = router

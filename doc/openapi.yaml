@@ -1517,7 +1517,7 @@ paths:
       tags:
       - Vínculo Etapa-Doadora
       summary: Lista as jornadas ativas e etapas de uma doadora
-      description: Retorna as especificações de cada jornada ativa da doadora, o progresso das etapas e os vínculos/ciclos já registrados
+      description: Retorna as especificações de cada jornada ativa da doadora, o progresso das etapas e os vínculos registrados. Em etapas repetíveis, ciclo indica a quantidade restante.
       parameters:
       - name: id
         in: path
@@ -1535,12 +1535,78 @@ paths:
           description: Doadora não encontrada
         '500':
           description: Error Internal Server (Controller / Model)
+  /v1/materna/vinculo-etapa-doadora/{id}/ciclos:
+    patch:
+      tags:
+      - Vínculo Etapa-Doadora
+      summary: Define a quantidade de ciclos de uma etapa repetível
+      description: Define o total de ciclos antes da primeira conclusão. O valor fica no campo ciclo do vínculo e não pode ser alterado após iniciar as conclusões.
+      parameters:
+      - name: id
+        in: path
+        description: ID do vínculo etapa-doadora
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Quantidade total planejada de ciclos
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - quantidade_ciclos
+              properties:
+                quantidade_ciclos:
+                  type: integer
+                  minimum: 1
+                  example: 6
+      responses:
+        '200':
+          description: Quantidade de ciclos definida
+        '400':
+          description: ID, quantidade ou etapa inválida
+        '404':
+          description: Vínculo não encontrado
+        '409':
+          description: Quantidade já definida por conclusões anteriores
+        '415':
+          description: Tipo de conteúdo inválido
+        '500':
+          description: Erro interno do servidor (controller/model)
+  /v1/materna/vinculo-etapa-doadora/{id}/concluir:
+    patch:
+      tags:
+      - Vínculo Etapa-Doadora
+      summary: Conclui um ciclo da etapa repetível
+      description: Decrementa em um o campo ciclo do mesmo vínculo e grava a data de conclusão. Marca o vínculo como encerrado quando não restarem ciclos.
+      parameters:
+      - name: id
+        in: path
+        description: ID do vínculo etapa-doadora
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Ciclo concluído
+        '400':
+          description: ID ou etapa inválida
+        '404':
+          description: Vínculo não encontrado
+        '409':
+          description: Quantidade de ciclos não definida ou todos os ciclos já concluídos
+        '500':
+          description: Erro interno do servidor (controller/model)
   /v1/materna/vinculo-etapa-doadora/{id}:
     patch:
       tags:
       - Vínculo Etapa-Doadora
-      summary: Atualiza a data de conclusão de um vínculo
-      description: Define ou remove a data de conclusão do vínculo
+      summary: Atualiza a data de conclusão de uma etapa não repetível
+      description: Define ou remove a data de conclusão de uma etapa não repetível. Etapas repetíveis devem usar a rota específica de conclusão de ciclos.
       parameters:
       - name: id
         in: path

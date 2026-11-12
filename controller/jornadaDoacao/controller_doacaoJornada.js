@@ -112,6 +112,14 @@ const atualizarDataConclusao = async function (id, dados, contentType) {
         if (!result) {
             return customMessage.ERROR_INTERNAL_SERVER_MODEL
         }
+        if (result.status === "nao_encontrado") {
+            return customMessage.ERROR_NOT_FOUND
+        }
+        if (result.status === "etapa_repetivel") {
+            customMessage.ERROR_CONFLICT.field =
+                "[CICLO] USE A ROTA DE CONCLUSÃO DE CICLOS PARA ETAPAS REPETÍVEIS"
+            return customMessage.ERROR_CONFLICT
+        }
 
         customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
         customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
@@ -121,6 +129,101 @@ const atualizarDataConclusao = async function (id, dados, contentType) {
             data_conclusao: dataConclusao
         }
 
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
+const definirQuantidadeCiclos = async function (id, dados, contentType) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (!String(contentType).toUpperCase().includes("APPLICATION/JSON")) {
+            return customMessage.ERROR_CONTENT_TYPE
+        }
+
+        id = Number(id)
+        if (!Number.isInteger(id) || id < 1) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID] INVÁLIDO (deve ser um número inteiro maior que 0)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+        if (dados == undefined || dados == null ||
+            !Number.isInteger(dados.quantidade_ciclos) ||
+            dados.quantidade_ciclos < 1) {
+            customMessage.ERROR_BAD_REQUEST.field =
+                "[QUANTIDADE_CICLOS] INVÁLIDA (informe um inteiro maior que 0)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const result = await EtapaDoadoraDAO.definirQuantidadeCiclosJornadaDoacao(
+            id,
+            dados.quantidade_ciclos
+        )
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL
+        }
+        if (result.status === "nao_encontrado") {
+            return customMessage.ERROR_NOT_FOUND
+        }
+        if (result.status === "etapa_nao_repetivel") {
+            customMessage.ERROR_BAD_REQUEST.field = "[ETAPA] NÃO É REPETÍVEL"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+        if (result.status === "ja_iniciado") {
+            customMessage.ERROR_CONFLICT.field =
+                "[CICLO] A QUANTIDADE SÓ PODE SER DEFINIDA ANTES DA PRIMEIRA CONCLUSÃO"
+            return customMessage.ERROR_CONFLICT
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+        customMessage.DEFAULT_MESSAGE.message = "Quantidade de ciclos definida"
+        customMessage.DEFAULT_MESSAGE.response = {
+            id_jornada_doacao: id,
+            ciclo: result.ciclo
+        }
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
+const concluirCiclo = async function (id) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        id = Number(id)
+        if (!Number.isInteger(id) || id < 1) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID] INVÁLIDO (deve ser um número inteiro maior que 0)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const result = await EtapaDoadoraDAO.concluirCicloJornadaDoacao(id)
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL
+        }
+        if (result.status === "nao_encontrado") {
+            return customMessage.ERROR_NOT_FOUND
+        }
+        if (result.status === "etapa_nao_repetivel") {
+            customMessage.ERROR_BAD_REQUEST.field = "[ETAPA] NÃO É REPETÍVEL"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+        if (result.status === "sem_ciclos") {
+            customMessage.ERROR_CONFLICT.field =
+                "[CICLO] QUANTIDADE NÃO DEFINIDA OU TODOS OS CICLOS JÁ FORAM CONCLUÍDOS"
+            return customMessage.ERROR_CONFLICT
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+        customMessage.DEFAULT_MESSAGE.message = result.encerrado
+            ? "Todos os ciclos foram concluídos"
+            : "Ciclo concluído"
+        customMessage.DEFAULT_MESSAGE.response = result
         return customMessage.DEFAULT_MESSAGE
     } catch (error) {
         console.error(error)
@@ -162,5 +265,7 @@ const listarJornadasAtivasPorDoadora = async function (idDoadora) {
 module.exports = {
     vincularEtapaDoadora,
     atualizarDataConclusao,
+    definirQuantidadeCiclos,
+    concluirCiclo,
     listarJornadasAtivasPorDoadora
 }

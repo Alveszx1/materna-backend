@@ -27,6 +27,14 @@ const insertVinculoEtapaDoadora = async function (vinculo) {
                 "SELECT @id AS id_jornada_doacao"
             )
 
+            await trx.raw(`
+                UPDATE tbl_jornada_doacao AS jd
+                INNER JOIN tbl_etapa AS etapa ON etapa.id = jd.id_etapa
+                SET jd.ciclo = 0
+                WHERE jd.id = ?
+                  AND etapa.is_repetivel = TRUE
+            `, [rows[0].id_jornada_doacao])
+
             return {
                 id_jornada_doacao: rows[0].id_jornada_doacao
             }
@@ -45,16 +53,100 @@ const insertVinculoEtapaDoadora = async function (vinculo) {
 
 const updateDataConclusaoJornadaDoacao = async function (id, dataConclusao) {
     try {
-        let sql = `
+        const [vinculos] = await knexConection.raw(`
+            SELECT etapa.is_repetivel
+            FROM tbl_jornada_doacao AS jd
+            INNER JOIN tbl_etapa AS etapa ON etapa.id = jd.id_etapa
+            WHERE jd.id = ?
+        `, [id])
+
+        if (vinculos.length === 0) {
+            return { status: "nao_encontrado" }
+        }
+        if (vinculos[0].is_repetivel) {
+            return { status: "etapa_repetivel" }
+        }
+
+        await knexConection.raw(`
             UPDATE tbl_jornada_doacao
             SET data_conclusao = ?
             WHERE id = ?
-        `
-
-        await knexConection.raw(sql, [dataConclusao, id])
-        return true
+        `, [dataConclusao, id])
+        return { status: "sucesso" }
     } catch (error) {
         console.error('Erro ao atualizar data de conclusão da jornada de doação:', error)
+        return false
+    }
+}
+
+const definirQuantidadeCiclosJornadaDoacao = async function (id, quantidadeCiclos) {
+    try {
+        return await knexConection.transaction(async trx => {
+            const [vinculos] = await trx.raw(`
+                SELECT jd.data_conclusao, jd.encerrado, etapa.is_repetivel
+                FROM tbl_jornada_doacao AS jd
+                INNER JOIN tbl_etapa AS etapa ON etapa.id = jd.id_etapa
+                WHERE jd.id = ?
+                FOR UPDATE
+            `, [id])
+
+            if (vinculos.length === 0) {
+                return { status: "nao_encontrado" }
+            }
+            if (!vinculos[0].is_repetivel) {
+                return { status: "etapa_nao_repetivel" }
+            }
+            if (vinculos[0].data_conclusao !== null || vinculos[0].encerrado) {
+                return { status: "ja_iniciado" }
+            }
+
+            await trx.raw(`
+                UPDATE tbl_jornada_doacao
+                SET ciclo = ?
+                WHERE id = ?
+            `, [quantidadeCiclos, id])
+
+            return { status: "sucesso", ciclo: quantidadeCiclos }
+        })
+    } catch (error) {
+        console.error('Erro ao definir a quantidade de ciclos da jornada de doação:', error)
+        return false
+    }
+}
+
+const concluirCicloJornadaDoacao = async function (id) {
+    try {
+        const [vinculos] = await knexConection.raw(`
+            SELECT jd.ciclo, jd.encerrado, etapa.is_repetivel
+            FROM tbl_jornada_doacao AS jd
+            INNER JOIN tbl_etapa AS etapa ON etapa.id = jd.id_etapa
+            WHERE jd.id = ?
+        `, [id])
+
+        if (vinculos.length === 0) return { status: "nao_encontrado" }
+        if (!vinculos[0].is_repetivel) return { status: "etapa_nao_repetivel" }
+        if (vinculos[0].encerrado || Number(vinculos[0].ciclo) < 1) {
+            return { status: "sem_ciclos" }
+        }
+
+        const [atualizacao] = await knexConection.raw(`
+            UPDATE tbl_jornada_doacao
+            SET encerrado = (ciclo = 1),
+                ciclo = ciclo - 1,
+                data_conclusao = CURRENT_DATE
+            WHERE id = ? AND ciclo > 0 AND encerrado = FALSE
+        `, [id])
+
+        if (atualizacao.affectedRows === 0) return { status: "sem_ciclos" }
+
+        return {
+            status: "sucesso",
+            id_jornada_doacao: id,
+            ciclo: Number(vinculos[0].ciclo) - 1,
+            encerrado: Number(vinculos[0].ciclo) === 1
+        }
+    } catch (error) {
+        console.error("Erro ao concluir ciclo da jornada de doação:", error)
         return false
     }
 }
@@ -107,7 +199,11 @@ const selectJornadasAtivasPorDoadora = async function (idDoadora) {
                                                     'ciclo', vinculo.ciclo,
                                                     'data_conclusao', vinculo.data_conclusao,
                                                     'encerrado', vinculo.encerrado,
-                                                    'status', IF(vinculo.data_conclusao IS NULL, 'em_andamento', 'concluida')
+                                                    'status', IF(
+                                                        etapa.is_repetivel,
+                                                        IF(vinculo.encerrado, 'concluida', 'em_andamento'),
+                                                        IF(vinculo.data_conclusao IS NULL, 'em_andamento', 'concluida')
+                                                    )
                                                 )
                                             )
                                             FROM tbl_jornada_doacao AS vinculo
@@ -162,5 +258,7 @@ const selectJornadasAtivasPorDoadora = async function (idDoadora) {
 module.exports = {
     insertVinculoEtapaDoadora,
     updateDataConclusaoJornadaDoacao,
+    definirQuantidadeCiclosJornadaDoacao,
+    concluirCicloJornadaDoacao,
     selectJornadasAtivasPorDoadora
 }
