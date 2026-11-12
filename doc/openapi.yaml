@@ -1309,11 +1309,35 @@ paths:
       tags:
       - Cadastro de Horário
       summary: Lista os horários da view vw_horarios
+      parameters:
+      - name: id_instituicao
+        in: query
+        description: Filtra os horários pela instituição
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      - name: is_proximo
+        in: query
+        description: Retorna apenas horários futuros quando true
+        required: false
+        schema:
+          type: boolean
+      - name: id_doadora
+        in: query
+        description: Use null para retornar horários sem doadora vinculada
+        required: false
+        schema:
+          type: string
+          enum:
+          - "null"
       responses:
         '200':
           description: Horários encontrados
         '404':
           description: Nenhum horário encontrado
+        '400':
+          description: ID da instituição inválido
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/horario/instituicao/{id}:
@@ -1486,6 +1510,29 @@ paths:
           description: Doadora, etapa, instituição ou jornada não encontrada
         '415':
           description: Invalid Content-Type
+        '500':
+          description: Error Internal Server (Controller / Model)
+  /v1/materna/vinculo-etapa-doadora/doadora/{id}:
+    get:
+      tags:
+      - Vínculo Etapa-Doadora
+      summary: Lista as jornadas ativas e etapas de uma doadora
+      description: Retorna as especificações de cada jornada ativa da doadora, o progresso das etapas e os vínculos/ciclos já registrados
+      parameters:
+      - name: id
+        in: path
+        description: ID da doadora
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Jornadas ativas da doadora
+        '400':
+          description: ID da doadora inválido
+        '404':
+          description: Doadora não encontrada
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/vinculo-etapa-doadora/{id}:

@@ -11,6 +11,13 @@ const bodyParserJson = bodyParser.json()
 // Import da controller do vínculo etapa-doadora
 const controllerVinculoEtapaDoadora = require('../controller/jornadaDoacao/controller_doacaoJornada.js')
 
+router.get('/doadora/:id', async function(request, response) {
+    let result = await controllerVinculoEtapaDoadora.listarJornadasAtivasPorDoadora(request.params.id)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.post('/', bodyParserJson, async function (request, response) {
     let dados = request.body
     let contentType = request.headers['content-type']

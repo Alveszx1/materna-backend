@@ -402,9 +402,3 @@ create table tbl_codigo_envio(
     references			tbl_doadora(id)		          # de onde vem a FK
 
 );
-
-
-INSERT INTO tbl_status_agendamento (status) VALUES
-('Pendente'),
-('Aceito'),
-('Recusado');

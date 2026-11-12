@@ -18,6 +18,13 @@ router.get('/instituicao/:id', async function(request, response) {
     response.json(result)
 })
 
+router.get('/doadora/:id', async function(request, response) {
+    let result = await controllerJornada.buscarJornadaDoadora(request.params.id)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.patch('/:id', bodyParserJson, async function(request, response) {
     let id = request.params.id
     let dados = request.body

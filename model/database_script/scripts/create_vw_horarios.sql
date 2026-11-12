@@ -9,6 +9,7 @@ SELECT
     e.id AS id_etapa,
     e.titulo AS etapa,
     e.id_jornada AS id_jornada,
+    j.id_instituicao AS id_instituicao,
     ag.id AS id_agendamento,
     jd.id AS id_jornada_doacao,
     jd.encerrado AS encerrado,
@@ -30,6 +31,7 @@ SELECT
     (TIMESTAMP(ch.dia, ch.horario) >= NOW()) AS is_proximo
 FROM tbl_cadastro_horario ch
 INNER JOIN tbl_etapa e ON e.id = ch.id_etapa
+INNER JOIN tbl_jornada j ON j.id = e.id_jornada
 LEFT JOIN tbl_agendamento ag ON ag.id_cadastro_horario = ch.id
 LEFT JOIN tbl_status_agendamento sa ON sa.id = ag.id_status_agendamento
 LEFT JOIN tbl_jornada_doacao jd ON jd.id = ag.id_jornada_doacao

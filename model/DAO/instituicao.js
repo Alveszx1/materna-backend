@@ -209,6 +209,29 @@ const selectByIdInstituicao = async function (id) {
     }
 }
 
+const selectDoadorasPorInstituicao = async function (idInstituicao) {
+    try {
+        const [resultado] = await knexConection.raw(
+            "CALL procdoadorainstituicao(?)",
+            [idInstituicao]
+        )
+
+        if (Array.isArray(resultado) && resultado[0] && resultado[0][0]) {
+            return resultado[0][0]
+        }
+
+        return false
+    } catch (error) {
+        if (error.sqlState == "45000" &&
+            error.sqlMessage == "Erro: instituicao nao encontrada.") {
+            return null
+        }
+
+        console.error("Erro ao buscar doadoras da instituição:", error)
+        return false
+    }
+}
+
 // Retorna as instituições mais próximas de uma coordenada
 const selectInstituicoesProximas = async function (latitude, longitude, limite) {
     try {
@@ -254,5 +277,6 @@ module.exports = {
     updateInstituicao,
     selectAllInstituicoes,
     selectByIdInstituicao,
-    selectInstituicoesProximas
+    selectInstituicoesProximas,
+    selectDoadorasPorInstituicao
 }

@@ -158,6 +158,7 @@ const selectHorariosByEtapa = async function (idEtapa) {
 const selectHorariosAgenda = async function (filtros) {
     try {
         let condicoes = []
+        let valores = []
 
         if (filtros.is_proximo === "true")
             condicoes.push("is_proximo = true")
@@ -165,13 +166,18 @@ const selectHorariosAgenda = async function (filtros) {
         if (filtros.id_doadora === "null")
             condicoes.push("id_doadora IS NULL")
 
+        if (filtros.id_instituicao !== undefined) {
+            condicoes.push("id_instituicao = ?")
+            valores.push(Number(filtros.id_instituicao))
+        }
+
         let sql = "SELECT * FROM vw_horarios"
 
         if (condicoes.length > 0)
             sql += ` WHERE ${condicoes.join(" AND ")}`
 
         sql += " ORDER BY data, hora"
-        let result = await knexConection.raw(sql)
+        let result = await knexConection.raw(sql, valores)
 
         if (Array.isArray(result))
             return result[0]

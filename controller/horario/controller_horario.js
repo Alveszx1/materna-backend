@@ -140,6 +140,15 @@ const listarHorariosAgenda = async function (filtros) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
     try {
+        if (filtros.id_instituicao !== undefined) {
+            const idInstituicao = Number(filtros.id_instituicao)
+            if (!Number.isInteger(idInstituicao) || idInstituicao <= 0) {
+                customMessage.ERROR_BAD_REQUEST.field = "[ID_INSTITUICAO] INVÁLIDO (deve ser um número inteiro maior que 0)"
+                return customMessage.ERROR_BAD_REQUEST
+            }
+            filtros.id_instituicao = idInstituicao
+        }
+
         let result = await horarioDAO.selectHorariosAgenda(filtros)
 
         if (result) {

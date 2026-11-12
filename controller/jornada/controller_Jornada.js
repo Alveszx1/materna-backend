@@ -150,6 +150,151 @@ const listarJornadasPorInstituicao = async function (idInstituicao) {
     }
 }
 
+const buscarJornadaDoadora = async function (idDoadora) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        idDoadora = Number(idDoadora)
+
+        if (!Number.isInteger(idDoadora) || idDoadora <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_DOADORA] INVÁLIDO (deve ser um número inteiro maior que 0)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const rows = await jornadaDAO.selectJornadaDoadoraById(idDoadora)
+
+        if (!rows) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_JORNADA
+        }
+
+        if (rows.length === 0) {
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        const primeiraLinha = rows[0]
+        const doadora = {
+            id: primeiraLinha.id_doadora,
+            nome: primeiraLinha.nome_doadora,
+            foto: primeiraLinha.foto_doadora,
+            data_nascimento: primeiraLinha.data_nascimento,
+            email: primeiraLinha.email,
+            telefone: primeiraLinha.telefone,
+            endereco: {
+                logradouro: primeiraLinha.logradouro,
+                cep: primeiraLinha.cep,
+                bairro: primeiraLinha.bairro,
+                numero: primeiraLinha.numero_endereco,
+                complemento: primeiraLinha.complemento,
+                cidade: primeiraLinha.cidade,
+                sigla_estado: primeiraLinha.sigla_estado
+            }
+        }
+
+        const jornadas = new Map()
+        const etapasPorJornada = new Map()
+        const atividadesPorId = new Map()
+        const documentosPorAtividade = new Map()
+        const agendamentosPorAtividade = new Map()
+
+        for (const linha of rows) {
+            if (linha.id_jornada === null) {
+                continue
+            }
+
+            if (!jornadas.has(linha.id_jornada)) {
+                jornadas.set(linha.id_jornada, {
+                    id: linha.id_jornada,
+                    nome: linha.nome_jornada,
+                    descricao: linha.descricao_jornada,
+                    is_ativo: linha.jornada_ativa,
+                    id_instituicao: linha.id_instituicao,
+                    instituicao: linha.nome_instituicao,
+                    etapas: []
+                })
+                etapasPorJornada.set(linha.id_jornada, new Map())
+            }
+
+            const etapas = etapasPorJornada.get(linha.id_jornada)
+            if (linha.id_etapa !== null && !etapas.has(linha.id_etapa)) {
+                const etapa = {
+                    id: linha.id_etapa,
+                    titulo: linha.titulo_etapa,
+                    descricao: linha.descricao_etapa,
+                    ordem: linha.ordem_etapa,
+                    documento: linha.documento_etapa,
+                    is_repetivel: linha.is_repetivel,
+                    is_agendavel: linha.is_agendavel,
+                    is_obrigatorio: linha.is_obrigatorio,
+                    is_solicita_arquivo: linha.is_solicita_arquivo,
+                    is_precisa_aprovacao: linha.is_precisa_aprovacao,
+                    ciclos: []
+                }
+                etapas.set(linha.id_etapa, etapa)
+                jornadas.get(linha.id_jornada).etapas.push(etapa)
+            }
+
+            if (linha.id_jornada_doacao === null) {
+                continue
+            }
+
+            if (!atividadesPorId.has(linha.id_jornada_doacao)) {
+                const atividade = {
+                    id: linha.id_jornada_doacao,
+                    ciclo: linha.ciclo,
+                    data_conclusao: linha.data_conclusao,
+                    encerrado: linha.encerrado,
+                    documentos: [],
+                    agendamentos: []
+                }
+                atividadesPorId.set(linha.id_jornada_doacao, atividade)
+                etapas.get(linha.id_etapa).ciclos.push(atividade)
+                documentosPorAtividade.set(linha.id_jornada_doacao, new Set())
+                agendamentosPorAtividade.set(linha.id_jornada_doacao, new Set())
+            }
+
+            const atividade = atividadesPorId.get(linha.id_jornada_doacao)
+
+            if (linha.id_documento !== null) {
+                const documentos = documentosPorAtividade.get(linha.id_jornada_doacao)
+                if (!documentos.has(linha.id_documento)) {
+                    documentos.add(linha.id_documento)
+                    atividade.documentos.push({
+                        id: linha.id_documento,
+                        documento: linha.arquivo_documento,
+                        motivo_recusa: linha.motivo_recusa,
+                        id_status_documento: linha.id_status_documento,
+                        status: linha.status_documento
+                    })
+                }
+            }
+
+            if (linha.id_agendamento !== null) {
+                const agendamentos = agendamentosPorAtividade.get(linha.id_jornada_doacao)
+                if (!agendamentos.has(linha.id_agendamento)) {
+                    agendamentos.add(linha.id_agendamento)
+                    atividade.agendamentos.push({
+                        id: linha.id_agendamento,
+                        dia: linha.dia_agendamento,
+                        horario: linha.horario_agendamento,
+                        status: linha.status_agendamento
+                    })
+                }
+            }
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+        customMessage.DEFAULT_MESSAGE.response = {
+            doadora,
+            jornadas: Array.from(jornadas.values())
+        }
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const atualizarStatusJornada = async function (id, dados, contentType) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
@@ -206,5 +351,6 @@ const tratarDados = async function (jornada) {
 module.exports = {
     inserirNovaJornada,
     listarJornadasPorInstituicao,
+    buscarJornadaDoadora,
     atualizarStatusJornada
 }

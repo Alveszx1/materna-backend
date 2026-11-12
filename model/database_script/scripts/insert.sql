@@ -1,11 +1,11 @@
 #ARQUIVOS RESPONDSAVEL POR FAZER CADASTRO
 
 #######################################################
-INSERT INTO tbl_status_agendamento (status) VALUES
-('Pendente'),
-('Aceito'),
-('Recusado'),
-('Cancelado');
+INSERT INTO tbl_status_agendamento (id, status) VALUES
+(1, 'Pendente'),
+(2, 'Aceito'),
+(3, 'Recusado'),
+(4, 'Cancelado');
 
 INSERT INTO tbl_status_documento_doadora (id, status) VALUES
 (1, 'Pendente'),
@@ -377,166 +377,71 @@ VALUES
 
 
 -- ============================================================
--- CICLOS
+-- ETAPAS DAS JORNADAS DE DOAÇÃO
+-- Uma linha representa uma etapa em um ciclo da doadora.
 -- ============================================================
 
-INSERT INTO tbl_ciclo
-(id, numero_ciclo, is_concluido, id_jornada, id_doadora)
+INSERT INTO tbl_jornada_doacao
+(id, ciclo, data_conclusao, encerrado, id_etapa, id_doadora, id_instituicao, id_jornada)
 VALUES
+-- Maria: três coletas concluídas; etapas não repetíveis ocorrem uma vez
+(1, 1, '2026-04-10', true, 7, 1, 1, 1),
+(2, 2, '2026-05-15', true, 7, 1, 1, 1),
+(3, 3, '2026-06-20', true, 7, 1, 1, 1),
+(4, 1, '2026-09-01', false, 1, 1, 1, 1),
+(5, 1, '2026-09-03', false, 2, 1, 1, 1),
+(6, 1, '2026-09-05', false, 3, 1, 1, 1),
+(7, 1, '2026-09-10', false, 4, 1, 1, 1),
+(8, 1, '2026-09-12', false, 5, 1, 1, 1),
+(9, 1, '2026-09-15', false, 6, 1, 1, 1),
+(10, 4, NULL, false, 7, 1, 1, 1),
 
--- MARIA - BANCO 1
-(1, 1, true, 1, 1),
-(2, 2, true, 1, 1),
-(3, 3, true, 1, 1),
-(4, 4, false, 1, 1),
+-- Ana: está na etapa de orientação
+(11, 1, '2026-09-20', false, 1, 2, 1, 1),
+(12, 1, '2026-09-22', false, 2, 2, 1, 1),
+(13, 1, '2026-09-24', false, 3, 2, 1, 1),
+(14, 1, '2026-09-26', false, 4, 2, 1, 1),
+(15, 1, '2026-09-28', false, 5, 2, 1, 1),
+(16, 1, NULL, false, 6, 2, 1, 1),
 
--- ANA - BANCO 1
-(5, 1, false, 1, 2),
+-- Juliana: três coletas concluídas; etapas não repetíveis ocorrem uma vez
+(17, 1, '2026-04-12', true, 14, 4, 2, 2),
+(18, 2, '2026-05-17', true, 14, 4, 2, 2),
+(19, 3, '2026-06-22', true, 14, 4, 2, 2),
+(20, 1, '2026-08-01', false, 8, 4, 2, 2),
+(21, 1, '2026-08-03', false, 9, 4, 2, 2),
+(22, 1, '2026-08-05', false, 10, 4, 2, 2),
+(23, 1, '2026-08-08', false, 11, 4, 2, 2),
+(24, 1, '2026-08-10', false, 12, 4, 2, 2),
+(25, 1, '2026-08-12', false, 13, 4, 2, 2),
+(26, 4, NULL, false, 14, 4, 2, 2),
 
--- CARLA - BANCO 1
-(6, 1, false, 1, 3),
+-- Fernanda: aguardando a doação agendada
+(27, 1, '2026-09-01', false, 8, 5, 2, 2),
+(28, 1, '2026-09-03', false, 9, 5, 2, 2),
+(29, 1, '2026-09-05', false, 10, 5, 2, 2),
+(30, 1, '2026-09-08', false, 11, 5, 2, 2),
+(31, 1, '2026-09-10', false, 12, 5, 2, 2),
+(32, 1, '2026-09-12', false, 13, 5, 2, 2),
+(33, 1, NULL, false, 14, 5, 2, 2),
 
--- JULIANA - BANCO 2
-(7, 1, true, 2, 4),
-(8, 2, true, 2, 4),
-(9, 3, true, 2, 4),
-(10, 4, false, 2, 4),
+-- Camila: três coletas concluídas; etapas não repetíveis ocorrem uma vez
+(34, 1, '2026-04-15', true, 21, 7, 3, 3),
+(35, 2, '2026-05-20', true, 21, 7, 3, 3),
+(36, 3, '2026-06-25', true, 21, 7, 3, 3),
+(37, 1, '2026-08-15', false, 15, 7, 3, 3),
+(38, 1, '2026-08-17', false, 16, 7, 3, 3),
+(39, 1, '2026-08-19', false, 17, 7, 3, 3),
+(40, 1, '2026-08-22', false, 18, 7, 3, 3),
+(41, 1, '2026-08-24', false, 19, 7, 3, 3),
+(42, 1, '2026-08-26', false, 20, 7, 3, 3),
+(43, 4, NULL, false, 21, 7, 3, 3),
 
--- FERNANDA - BANCO 2
-(11, 1, false, 2, 5),
-
--- BEATRIZ - BANCO 2
-(12, 1, false, 2, 6),
-
--- CAMILA - BANCO 3
-(13, 1, true, 3, 7),
-(14, 2, true, 3, 7),
-(15, 3, true, 3, 7),
-(16, 4, false, 3, 7),
-
--- DANIELA - BANCO 3
-(17, 1, false, 3, 8),
-
--- LARISSA - BANCO 3
-(18, 1, false, 3, 9);
-
-
--- ============================================================
--- ETAPAS DA MARIA
--- CICLO 1, 2 E 3 = DOAÇÕES JÁ REALIZADAS
--- ============================================================
-
-INSERT INTO tbl_etapa_ciclo
-(id, data_conclusao, id_etapa, id_ciclo)
-VALUES
-(1, '2026-04-10', 7, 1),
-(2, '2026-05-15', 7, 2),
-(3, '2026-06-20', 7, 3),
-
--- CICLO 4 - TODAS AS ETAPAS ANTERIORES CONCLUÍDAS
-(4, '2026-09-01', 1, 4),
-(5, '2026-09-03', 2, 4),
-(6, '2026-09-05', 3, 4),
-(7, '2026-09-10', 4, 4),
-(8, '2026-09-12', 5, 4),
-(9, '2026-09-15', 6, 4),
-(10, NULL, 7, 4);
-
-
--- ============================================================
--- ANA
--- ESTÁ NA ETAPA ANTERIOR À DOAÇÃO
--- ============================================================
-
-INSERT INTO tbl_etapa_ciclo
-(id, data_conclusao, id_etapa, id_ciclo)
-VALUES
-(11, '2026-09-20', 1, 5),
-(12, '2026-09-22', 2, 5),
-(13, '2026-09-24', 3, 5),
-(14, '2026-09-26', 4, 5),
-(15, '2026-09-28', 5, 5),
-(16, NULL, 6, 5);
-
-
--- ============================================================
--- JULIANA
--- 3 DOAÇÕES REALIZADAS + 4ª DOAÇÃO ATUAL
--- ============================================================
-
-INSERT INTO tbl_etapa_ciclo
-(id, data_conclusao, id_etapa, id_ciclo)
-VALUES
-(17, '2026-04-12', 14, 7),
-(18, '2026-05-17', 14, 8),
-(19, '2026-06-22', 14, 9),
-
-(20, '2026-08-01', 8, 10),
-(21, '2026-08-03', 9, 10),
-(22, '2026-08-05', 10, 10),
-(23, '2026-08-08', 11, 10),
-(24, '2026-08-10', 12, 10),
-(25, '2026-08-12', 13, 10),
-(26, NULL, 14, 10);
-
-
--- ============================================================
--- FERNANDA
--- JÁ PASSOU POR TODAS AS ETAPAS E AGENDOU A DOAÇÃO
--- ============================================================
-
-INSERT INTO tbl_etapa_ciclo
-(id, data_conclusao, id_etapa, id_ciclo)
-VALUES
-(27, '2026-09-01', 8, 11),
-(28, '2026-09-03', 9, 11),
-(29, '2026-09-05', 10, 11),
-(30, '2026-09-08', 11, 11),
-(31, '2026-09-10', 12, 11),
-(32, '2026-09-12', 13, 11),
-(33, NULL, 14, 11);
-
-
--- ============================================================
--- CAMILA
--- 3 DOAÇÕES REALIZADAS + 4ª DOAÇÃO ATUAL
--- ============================================================
-
-INSERT INTO tbl_etapa_ciclo
-(id, data_conclusao, id_etapa, id_ciclo)
-VALUES
-(34, '2026-04-15', 21, 13),
-(35, '2026-05-20', 21, 14),
-(36, '2026-06-25', 21, 15),
-
-(37, '2026-08-15', 15, 16),
-(38, '2026-08-17', 16, 16),
-(39, '2026-08-19', 17, 16),
-(40, '2026-08-22', 18, 16),
-(41, '2026-08-24', 19, 16),
-(42, '2026-08-26', 20, 16),
-(43, NULL, 21, 16);
-
-
--- ============================================================
--- DANIELA
--- ESTÁ EM EXAMES
--- ============================================================
-
-INSERT INTO tbl_etapa_ciclo
-(id, data_conclusao, id_etapa, id_ciclo)
-VALUES
-(44, '2026-09-15', 15, 17),
-(45, '2026-09-17', 16, 17),
-(46, '2026-09-19', 17, 17),
-(47, NULL, 18, 17);
-
-
--- ============================================================
--- CARLA, BEATRIZ E LARISSA
--- NÃO POSSUEM REGISTRO EM tbl_etapa_ciclo
--- POIS AINDA NÃO INICIARAM A JORNADA
--- ============================================================
+-- Daniela: está na etapa de exames
+(44, 1, '2026-09-15', false, 15, 8, 3, 3),
+(45, 1, '2026-09-17', false, 16, 8, 3, 3),
+(46, 1, '2026-09-19', false, 17, 8, 3, 3),
+(47, 1, NULL, false, 18, 8, 3, 3);
 
 
 -- ============================================================
@@ -559,27 +464,13 @@ VALUES
 
 
 -- ============================================================
--- STATUS DE AGENDAMENTO
--- ============================================================
-
-INSERT INTO tbl_status_agendamento
-(id, status)
-VALUES
-(1, 'Agendado'),
-(2, 'Confirmado'),
-(3, 'Realizado'),
-(4, 'Cancelado'),
-(5, 'Não compareceu');
-
-
--- ============================================================
 -- AGENDAMENTO DA FERNANDA
 -- ============================================================
 
 INSERT INTO tbl_agendamento
-(id, id_ciclo, id_cadastro_horario, id_status_agendamento)
+(id, id_jornada_doacao, id_cadastro_horario, id_status_agendamento)
 VALUES
-(1, 11, 4, 1);
+(1, 33, 4, 2);
 
 
 -- ============================================================
@@ -663,4 +554,4 @@ Camila:
     Ciclo 2 -> Doação concluída
     Ciclo 3 -> Doação concluída
     Ciclo 4 -> Doação atual
-/*
+*/

@@ -128,7 +128,39 @@ const atualizarDataConclusao = async function (id, dados, contentType) {
     }
 }
 
+const listarJornadasAtivasPorDoadora = async function (idDoadora) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        idDoadora = Number(idDoadora)
+        if (!Number.isInteger(idDoadora) || idDoadora <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_DOADORA] INVÁLIDO (deve ser um número inteiro maior que 0)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const result = await EtapaDoadoraDAO.selectJornadasAtivasPorDoadora(idDoadora)
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL
+        }
+
+        if (result.length === 0 || result.jornadas.length === 0) {
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+        customMessage.DEFAULT_MESSAGE.count = result.jornadas.length
+        customMessage.DEFAULT_MESSAGE.response = result
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 module.exports = {
     vincularEtapaDoadora,
-    atualizarDataConclusao
+    atualizarDataConclusao,
+    listarJornadasAtivasPorDoadora
 }

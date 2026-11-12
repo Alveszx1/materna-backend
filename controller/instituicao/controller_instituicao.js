@@ -317,6 +317,45 @@ const buscarInstituicaoById = async function (id) {
     }
 }
 
+const listarDoadorasPorInstituicao = async function (idInstituicao) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        idInstituicao = Number(idInstituicao)
+
+        if (!Number.isInteger(idInstituicao) || idInstituicao <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_INSTITUICAO] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const result = await instituicaoDAO.selectDoadorasPorInstituicao(idInstituicao)
+
+        if (result === null) {
+            customMessage.ERROR_NOT_FOUND.field = "[ID_INSTITUICAO] INSTITUIÇÃO NÃO ENCONTRADA"
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_INSTITUICAO
+        }
+
+        const doadoras = typeof result.doadoras == "string"
+            ? JSON.parse(result.doadoras)
+            : result.doadoras
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+        customMessage.DEFAULT_MESSAGE.message = result.mensagem
+        customMessage.DEFAULT_MESSAGE.count = doadoras.length
+        customMessage.DEFAULT_MESSAGE.response.doadoras = doadoras
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error("Erro ao listar doadoras da instituição:", error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 
 const buscarInstituicoesProximasByCep = async function (cep) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
@@ -378,5 +417,5 @@ module.exports = {
     buscarInstituicaoById,
     atualizarInstituicao,
     buscarInstituicoesProximasByCep,
-    
+    listarDoadorasPorInstituicao
 }
