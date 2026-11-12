@@ -37,7 +37,7 @@ BEGIN
     DECLARE v_id_cidade    INT;
     DECLARE v_id_endereco  INT;
     DECLARE v_id_telefone  INT;
-    DECLARE v_id_doadora   INT;   -- NOVO: guarda o id da doadora para devolver no final
+    DECLARE v_id_doadora   INT;
 
     # Se qualquer erro acontecer, desfaz tudo
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -48,7 +48,7 @@ BEGIN
 
     START TRANSACTION;
 
-    #  ESTADO: reaproveita se já existir, senão cria
+    # ESTADO: reaproveita se já existir, senão cria
     SELECT id INTO v_id_estado
     FROM tbl_estado
     WHERE sigla = p_sigla_estado
@@ -88,15 +88,15 @@ BEGIN
         (nome, cpf, foto, data_nascimento, email, senha, sal, id_endereco, id_telefone)
     VALUES
         (p_nome, p_cpf, p_foto, p_data_nascimento, p_email, p_senha, p_sal, v_id_endereco, v_id_telefone);
-    SET v_id_doadora = LAST_INSERT_ID();   -- NOVO
+    SET v_id_doadora = LAST_INSERT_ID();
 
-    # CODIGO DE ENVIO (data e hora atuais)
-    INSERT INTO tbl_codigo_envio (codigo, data_criacao, id_doadora)
-    VALUES (p_codigo, NOW(), v_id_doadora);
+    # CODIGO DE ENVIO (codigo, email, data e hora atuais)
+    INSERT INTO tbl_codigo_envio (codigo, email, data_criacao, id_doadora)
+    VALUES (p_codigo, p_email, NOW(), v_id_doadora);
 
     COMMIT;
 
-    # NOVO: devolve o id para o DAO (resultado[0][0].id_doadora)
+    # Devolve o id para o DAO (resultado[0][0].id_doadora)
     SELECT v_id_doadora AS id_doadora;
 END$$
 

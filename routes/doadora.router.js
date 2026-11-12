@@ -28,6 +28,18 @@ router.get('/:id', async function (request, response) {
     response.json(result)
 })
 
+router.post('/otp/verificar', bodyParserJson, async function (request, response) {
+
+    let dados = request.body
+    let contentType = request.headers['content-type']
+    let result = await controllerDoadora.verificarOtp(dados, contentType)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
+// { "id_doadora": 1, "codigo": 123456 }
+
 router.put('/:id', bodyParserJson, async function(request, response) {
     let id = request.params.id
     let dados = request.body

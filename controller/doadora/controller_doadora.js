@@ -91,6 +91,26 @@ const validarDados = async function (doadora) {
     }
 }
 
+const validarDadosOtp = async function (dados) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    if (dados == undefined || dados == null) {
+        customMessage.ERROR_BAD_REQUEST.field = "[DADOS] INVÁLIDOS"
+        return customMessage.ERROR_BAD_REQUEST
+
+    } else if (dados.id_doadora == undefined || dados.id_doadora === "" || dados.id_doadora == null || isNaN(dados.id_doadora) || dados.id_doadora < 1) {
+        customMessage.ERROR_BAD_REQUEST.field = "[ID_DOADORA] INVÁLIDO"
+        return customMessage.ERROR_BAD_REQUEST
+
+    } else if (dados.codigo == undefined || dados.codigo === "" || dados.codigo == null || !/^\d{6}$/.test(String(dados.codigo))) {
+        customMessage.ERROR_BAD_REQUEST.field = "[CODIGO] INVÁLIDO (6 dígitos numéricos)"
+        return customMessage.ERROR_BAD_REQUEST
+
+    } else {
+        return false
+    }
+}
+
 const inserirNovaDoadora = async function (doadora, contentType) {
 
     let customMessage = JSON.parse(JSON.stringify(configMessages))
@@ -325,6 +345,73 @@ const buscarDoadoraById = async function (id) {
     }
 }
 
+
+
+const verificarOtp = async function (dados, contentType) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+
+        if (String(contentType).toUpperCase() == "APPLICATION/JSON") {
+
+            let validar = await validarDadosOtp(dados)
+
+            if (validar) {
+                return validar
+            } else {
+
+                let resultBuscarDoadora = await buscarDoadoraById(dados.id_doadora)
+
+                if (resultBuscarDoadora.status) {
+
+                    let resultOtp = await doadoraDAO.selectUltimoCodigoByDoadora(Number(dados.id_doadora))
+
+                    if (resultOtp) {
+
+                        if (resultOtp.length > 0) {
+
+                            let otp = resultOtp[0]
+
+                            if (Number(dados.codigo) !== Number(otp.codigo)) {
+                                customMessage.ERROR_BAD_REQUEST.field = "[CODIGO] INCORRETO"
+                                return customMessage.ERROR_BAD_REQUEST
+
+                            } else {
+
+                                let result = await doadoraDAO.validarDoadoraOtp(Number(dados.id_doadora))
+
+                                if (result) {
+                                    customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+                                    customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+                                    customMessage.DEFAULT_MESSAGE.message = "Conta validada com sucesso"
+                                    customMessage.DEFAULT_MESSAGE.response = { id_doadora: Number(dados.id_doadora), is_validado: true }
+
+                                    return customMessage.DEFAULT_MESSAGE
+                                } else {
+                                    return customMessage.ERROR_INTERNAL_SERVER_MODEL
+                                }
+                            }
+
+                        } else {
+                            return customMessage.ERROR_NOT_FOUND 
+                        }
+                    } else {
+                        return customMessage.ERROR_INTERNAL_SERVER_MODEL
+                    }
+
+                } else {
+                    return resultBuscarDoadora 
+                }
+            }
+        } else {
+            return customMessage.ERROR_CONTENT_TYPE
+        }
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const excluirDoadora = async function (id) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
@@ -370,6 +457,7 @@ module.exports = {
     inserirNovaDoadora,
     atualizarDoadora,
     listarDoadora,
+    verificarOtp,
     buscarDoadoraById,
     buscarNomeDoadora,
     excluirDoadora

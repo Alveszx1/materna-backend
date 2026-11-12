@@ -145,9 +145,45 @@ const deleteDoadora = async function(id){
     }
 }
 
+
+const selectUltimoCodigoByDoadora = async function (id_doadora) {
+    try {
+        const sql = `
+            select codigo
+            from tbl_codigo_envio
+            where id_doadora = ?
+            order by data_criacao desc, id desc
+            limit 1
+        `;
+
+        const [resultado] = await knexConection.raw(sql, [id_doadora]);
+        return resultado;
+    } catch (error) {
+        console.error('Erro ao buscar código OTP:', error);
+        return false;
+    }
+};
+
+
+const validarDoadoraOtp = async function (id_doadora) {
+    try {
+        await knexConection.transaction(async (trx) => {
+            await trx.raw(`update tbl_doadora set is_validado = true where id = ?`, [id_doadora]);
+            await trx.raw(`delete from tbl_codigo_envio where id_doadora = ?`, [id_doadora]);
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Erro ao validar doadora via OTP:', error);
+        return false;
+    }
+};
+
 module.exports = {
     insertDoadora,
     selectByIdDoadora,
     updateDoadora,
-    deleteDoadora
+    deleteDoadora,
+    selectUltimoCodigoByDoadora,
+    validarDoadoraOtp
 };
