@@ -22,6 +22,35 @@ const validarDados = async function (vinculo) {
     }
 }
 
+const validarDadosEncerramentoJornada = async function (dados) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    if (dados == undefined || dados == null) {
+
+        customMessage.ERROR_BAD_REQUEST.field = "[DADOS] INVÁLIDOS"
+        return customMessage.ERROR_BAD_REQUEST
+
+    } else if (
+        dados.id_jornada_doacao == undefined || dados.id_jornada_doacao == "" || dados.id_jornada_doacao == null || !Number.isInteger(Number(dados.id_jornada_doacao)) ||
+        Number(dados.id_jornada_doacao) <= 0
+    ) {
+
+        customMessage.ERROR_BAD_REQUEST.field = "[ID_JORNADA_DOACAO] INVÁLIDO"
+        return customMessage.ERROR_BAD_REQUEST
+
+    } else if (
+        dados.id_doadora == undefined ||dados.id_doadora == "" ||dados.id_doadora == null ||!Number.isInteger(Number(dados.id_doadora)) ||Number(dados.id_doadora) <= 0
+    ) {
+
+        customMessage.ERROR_BAD_REQUEST.field = "[ID_DOADORA] INVÁLIDO"
+        return customMessage.ERROR_BAD_REQUEST
+
+    } else {
+        return false
+    }
+}
+
+
 const tratarDados = async function (vinculo) {
 
     vinculo.id_doadora = Number(vinculo.id_doadora)
@@ -262,10 +291,70 @@ const listarJornadasAtivasPorDoadora = async function (idDoadora) {
     }
 }
 
+const cancelarJornadaDoacao = async function (id, dados, contentType) {
+
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+
+        if (String(contentType).toUpperCase() == "APPLICATION/JSON") {
+
+            let validar = await validarDadosEncerramentoJornada(dados)
+
+            if (!validar) {
+
+                let resultBuscarDoadora = await doadoraController.buscarDoadoraById(dados.id_doadora)
+
+                if (resultBuscarDoadora.status) {
+
+                    if (Number(id) == Number(dados.id_jornada_doacao)) {
+
+                        let result = await EtapaDoadoraDAO.cancelarJornadaDoacao(
+                            Number(id),
+                            Number(dados.id_doadora)
+                        )
+
+                        if (result) {
+
+                            customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+                            customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+                            customMessage.DEFAULT_MESSAGE.message = "Jornada cancelada com sucesso"
+                            customMessage.DEFAULT_MESSAGE.response = result
+
+                            return customMessage.DEFAULT_MESSAGE
+
+                        } else {
+                            return customMessage.ERROR_NOT_FOUND
+                        }
+
+                    } else {
+                        customMessage.ERROR_BAD_REQUEST.field = "[ID_JORNADA_DOACAO] DIFERENTE DO ID INFORMADO NA URL"
+                        return customMessage.ERROR_BAD_REQUEST
+                    }
+
+                } else {
+                    return resultBuscarDoadora
+                }
+
+            } else {
+                return validar
+            }
+
+        } else {
+            return customMessage.ERROR_CONTENT_TYPE
+        }
+
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 module.exports = {
     vincularEtapaDoadora,
     atualizarDataConclusao,
     definirQuantidadeCiclos,
+    cancelarJornadaDoacao,
     concluirCiclo,
     listarJornadasAtivasPorDoadora
 }

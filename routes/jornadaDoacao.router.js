@@ -27,6 +27,21 @@ router.post('/', bodyParserJson, async function (request, response) {
     response.json(result)
 })
 
+router.put('/:id/cancelar', bodyParserJson, async function (request, response) {
+    let id = request.params.id
+    let dados = request.body
+    let contentType = request.headers['content-type']
+
+    let result = await controllerVinculoEtapaDoadora.cancelarJornadaDoacao(
+        id,
+        dados,
+        contentType
+    )
+
+     response.status(result.status_code)
+     response.json(result)
+})
+
 router.patch('/:id', bodyParserJson, async function(request, response) {
     let id = request.params.id
     let dados = request.body

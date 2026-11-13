@@ -255,10 +255,76 @@ const selectJornadasAtivasPorDoadora = async function (idDoadora) {
     }
 }
 
+const cancelarJornadaDoacao = async function (idJornadaDoacao, idDoadora) {
+    try {
+
+        const sqlHorarios = `
+            UPDATE tbl_cadastro_horario AS ch
+            INNER JOIN tbl_agendamento AS a
+                ON a.id_cadastro_horario = ch.id
+            INNER JOIN tbl_jornada_doacao AS jd
+                ON a.id_jornada_doacao = jd.id
+            INNER JOIN tbl_jornada_doacao AS referencia
+                ON referencia.id = ?
+                AND referencia.id_doadora = ?
+                AND referencia.id_jornada = jd.id_jornada
+                AND referencia.id_instituicao = jd.id_instituicao
+            SET ch.disponivel = true
+            WHERE jd.id_doadora = ?
+              AND jd.encerrado = false
+        `;
+
+        const sqlJornada = `
+            UPDATE tbl_jornada_doacao AS jd
+            INNER JOIN tbl_jornada_doacao AS referencia
+                ON referencia.id = ?
+                AND referencia.id_doadora = ?
+                AND referencia.id_jornada = jd.id_jornada
+                AND referencia.id_instituicao = jd.id_instituicao
+            SET jd.encerrado = true
+            WHERE jd.id_doadora = ?
+              AND jd.encerrado = false
+        `;
+
+        const linhasAfetadas = await knexConection.transaction(async (trx) => {
+
+            // Libera os horários de todos os registros da jornada
+            await trx.raw(sqlHorarios, [
+                idJornadaDoacao,
+                idDoadora,
+                idDoadora
+            ]);
+
+            // Encerra todos os registros da mesma jornada
+            const [resultado] = await trx.raw(sqlJornada, [
+                idJornadaDoacao,
+                idDoadora,
+                idDoadora
+            ]);
+
+            return resultado.affectedRows;
+        });
+
+        if (linhasAfetadas === 0)
+            return false;
+
+        return {
+            id_doadora: idDoadora,
+            id_jornada: idJornadaDoacao,
+            registros_encerrados: linhasAfetadas
+        };
+
+    } catch (error) {
+        console.error('Erro ao cancelar jornada:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     insertVinculoEtapaDoadora,
     updateDataConclusaoJornadaDoacao,
     definirQuantidadeCiclosJornadaDoacao,
     concluirCicloJornadaDoacao,
-    selectJornadasAtivasPorDoadora
+    selectJornadasAtivasPorDoadora,
+    cancelarJornadaDoacao
 }
