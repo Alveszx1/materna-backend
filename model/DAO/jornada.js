@@ -74,7 +74,17 @@ const updateStatusJornada = async function (id, isAtivo) {
             WHERE id = ?
         `
 
-        await knexConection.raw(sql, [isAtivo, id])
+        const [resultado] = await knexConection.raw(sql, [isAtivo, id])
+
+        if (resultado.affectedRows === 0) {
+            const [jornadas] = await knexConection.raw(
+                'SELECT id FROM tbl_jornada WHERE id = ?',
+                [id]
+            )
+
+            return jornadas.length > 0 ? true : false
+        }
+
         return true
     } catch (error) {
         console.error('Erro ao atualizar status da jornada:', error)

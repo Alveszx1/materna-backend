@@ -299,7 +299,7 @@ const atualizarStatusJornada = async function (id, dados, contentType) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
     try {
-        if (String(contentType).toUpperCase() != "APPLICATION/JSON") {
+        if (!String(contentType).toUpperCase().includes("APPLICATION/JSON")) {
             return customMessage.ERROR_CONTENT_TYPE
         }
 

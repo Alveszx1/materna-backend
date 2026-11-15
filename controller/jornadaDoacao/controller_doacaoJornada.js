@@ -1,5 +1,6 @@
 const configMessages = require("../module/configMessage.js")
 const EtapaDoadoraDAO = require("../../model/DAO/vinculoEtapaDoadora.js")
+const doadoraController = require("../doadora/controller_doadora.js")
 
 
 const validarDados = async function (vinculo) {
@@ -28,14 +29,6 @@ const validarDadosEncerramentoJornada = async function (dados) {
     if (dados == undefined || dados == null) {
 
         customMessage.ERROR_BAD_REQUEST.field = "[DADOS] INVÁLIDOS"
-        return customMessage.ERROR_BAD_REQUEST
-
-    } else if (
-        dados.id_jornada_doacao == undefined || dados.id_jornada_doacao == "" || dados.id_jornada_doacao == null || !Number.isInteger(Number(dados.id_jornada_doacao)) ||
-        Number(dados.id_jornada_doacao) <= 0
-    ) {
-
-        customMessage.ERROR_BAD_REQUEST.field = "[ID_JORNADA_DOACAO] INVÁLIDO"
         return customMessage.ERROR_BAD_REQUEST
 
     } else if (
@@ -297,7 +290,13 @@ const cancelarJornadaDoacao = async function (id, dados, contentType) {
 
     try {
 
-        if (String(contentType).toUpperCase() == "APPLICATION/JSON") {
+        if (String(contentType).toUpperCase().includes("APPLICATION/JSON")) {
+            id = Number(id)
+
+            if (!Number.isInteger(id) || id <= 0) {
+                customMessage.ERROR_BAD_REQUEST.field = "[ID_JORNADA_DOACAO] INVÁLIDO"
+                return customMessage.ERROR_BAD_REQUEST
+            }
 
             let validar = await validarDadosEncerramentoJornada(dados)
 
@@ -307,29 +306,22 @@ const cancelarJornadaDoacao = async function (id, dados, contentType) {
 
                 if (resultBuscarDoadora.status) {
 
-                    if (Number(id) == Number(dados.id_jornada_doacao)) {
+                    let result = await EtapaDoadoraDAO.cancelarJornadaDoacao(
+                        id,
+                        Number(dados.id_doadora)
+                    )
 
-                        let result = await EtapaDoadoraDAO.cancelarJornadaDoacao(
-                            Number(id),
-                            Number(dados.id_doadora)
-                        )
+                    if (result) {
 
-                        if (result) {
+                        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+                        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+                        customMessage.DEFAULT_MESSAGE.message = "Jornada cancelada com sucesso"
+                        customMessage.DEFAULT_MESSAGE.response = result
 
-                            customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
-                            customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
-                            customMessage.DEFAULT_MESSAGE.message = "Jornada cancelada com sucesso"
-                            customMessage.DEFAULT_MESSAGE.response = result
-
-                            return customMessage.DEFAULT_MESSAGE
-
-                        } else {
-                            return customMessage.ERROR_NOT_FOUND
-                        }
+                        return customMessage.DEFAULT_MESSAGE
 
                     } else {
-                        customMessage.ERROR_BAD_REQUEST.field = "[ID_JORNADA_DOACAO] DIFERENTE DO ID INFORMADO NA URL"
-                        return customMessage.ERROR_BAD_REQUEST
+                        return customMessage.ERROR_NOT_FOUND
                     }
 
                 } else {

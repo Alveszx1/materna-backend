@@ -257,61 +257,57 @@ const selectJornadasAtivasPorDoadora = async function (idDoadora) {
 
 const cancelarJornadaDoacao = async function (idJornadaDoacao, idDoadora) {
     try {
+        const resultado = await knexConection.transaction(async (trx) => {
+            const [referencias] = await trx.raw(`
+                SELECT id_jornada, id_instituicao
+                FROM tbl_jornada_doacao
+                WHERE id = ? AND id_doadora = ?
+                FOR UPDATE
+            `, [idJornadaDoacao, idDoadora]);
 
-        const sqlHorarios = `
-            UPDATE tbl_cadastro_horario AS ch
-            INNER JOIN tbl_agendamento AS a
-                ON a.id_cadastro_horario = ch.id
-            INNER JOIN tbl_jornada_doacao AS jd
-                ON a.id_jornada_doacao = jd.id
-            INNER JOIN tbl_jornada_doacao AS referencia
-                ON referencia.id = ?
-                AND referencia.id_doadora = ?
-                AND referencia.id_jornada = jd.id_jornada
-                AND referencia.id_instituicao = jd.id_instituicao
-            SET ch.disponivel = true
-            WHERE jd.id_doadora = ?
-              AND jd.encerrado = false
-        `;
+            if (referencias.length === 0) {
+                return { status: "nao_encontrado" };
+            }
 
-        const sqlJornada = `
-            UPDATE tbl_jornada_doacao AS jd
-            INNER JOIN tbl_jornada_doacao AS referencia
-                ON referencia.id = ?
-                AND referencia.id_doadora = ?
-                AND referencia.id_jornada = jd.id_jornada
-                AND referencia.id_instituicao = jd.id_instituicao
-            SET jd.encerrado = true
-            WHERE jd.id_doadora = ?
-              AND jd.encerrado = false
-        `;
+            const referencia = referencias[0];
 
-        const linhasAfetadas = await knexConection.transaction(async (trx) => {
+            await trx.raw(`
+                UPDATE tbl_cadastro_horario AS ch
+                INNER JOIN tbl_agendamento AS a
+                    ON a.id_cadastro_horario = ch.id
+                INNER JOIN tbl_jornada_doacao AS jd
+                    ON a.id_jornada_doacao = jd.id
+                SET ch.disponivel = true
+                WHERE jd.id_doadora = ?
+                  AND jd.id_jornada = ?
+                  AND jd.id_instituicao = ?
+                  AND jd.encerrado = false
+            `, [idDoadora, referencia.id_jornada, referencia.id_instituicao]);
 
-            // Libera os horários de todos os registros da jornada
-            await trx.raw(sqlHorarios, [
-                idJornadaDoacao,
-                idDoadora,
-                idDoadora
-            ]);
+            const [atualizacao] = await trx.raw(`
+                UPDATE tbl_jornada_doacao
+                SET encerrado = true
+                WHERE id_doadora = ?
+                  AND id_jornada = ?
+                  AND id_instituicao = ?
+                  AND encerrado = false
+            `, [idDoadora, referencia.id_jornada, referencia.id_instituicao]);
 
-            // Encerra todos os registros da mesma jornada
-            const [resultado] = await trx.raw(sqlJornada, [
-                idJornadaDoacao,
-                idDoadora,
-                idDoadora
-            ]);
-
-            return resultado.affectedRows;
+            return {
+                status: "sucesso",
+                registros_encerrados: atualizacao.affectedRows,
+                id_jornada: referencia.id_jornada
+            };
         });
 
-        if (linhasAfetadas === 0)
+        if (resultado.status !== "sucesso" || resultado.registros_encerrados === 0) {
             return false;
+        }
 
         return {
             id_doadora: idDoadora,
-            id_jornada: idJornadaDoacao,
-            registros_encerrados: linhasAfetadas
+            id_jornada: resultado.id_jornada,
+            registros_encerrados: resultado.registros_encerrados
         };
 
     } catch (error) {
