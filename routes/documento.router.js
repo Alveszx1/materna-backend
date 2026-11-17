@@ -1,7 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const controllerDocumento = require('../controller/documento/controller_documento.js')
-
 const router = express.Router()
 const bodyParserJson = bodyParser.json()
 

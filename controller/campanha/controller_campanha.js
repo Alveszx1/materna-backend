@@ -104,7 +104,7 @@ const inserirNovaCampanha = async function(campanha, contentType){
     
 }
 
-const listarCampanha = async function(campanha) {
+const listarCampanha = async function() {
         // Cria uma cópia dos JSON do arquivo de configuração de mensagens 
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 

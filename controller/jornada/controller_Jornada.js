@@ -295,7 +295,7 @@ const buscarJornadaDoadora = async function (idDoadora) {
     }
 }
 
-const atualizarStatusJornada = async function (id, dados, contentType) {
+const atualizarStatusJornada = async function (id, dados, contentType, idInstituicao) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
     try {
@@ -315,7 +315,7 @@ const atualizarStatusJornada = async function (id, dados, contentType) {
             return customMessage.ERROR_BAD_REQUEST
         }
 
-        let result = await jornadaDAO.updateStatusJornada(id, dados.is_ativo)
+        let result = await jornadaDAO.updateStatusJornada(id, dados.is_ativo, idInstituicao)
 
         if (!result) {
             return customMessage.ERROR_INTERNAL_SERVER_MODEL_JORNADA

@@ -83,7 +83,6 @@ const selectByIdCampanha = async function (id) {
         
         let sql = `SELECT * FROM tbl_campanha
         WHERE id = ${id};`
-        
 
         let result = await knexConection.raw(sql)
 
@@ -118,14 +117,13 @@ const updateCampanha = async function (campanha) {
 
     if(result)
         return true
-    else 
+    else
         return false
 
     } catch (error) {
        
         return false
     }
-    
 }
 
 const deleteCampanha = async function(id){

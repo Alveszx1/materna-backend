@@ -1,6 +1,7 @@
 const express = require("express")
 const cors = require("cors")
 const app = express()
+const { authenticateJWT } = require("./middleware/MiddlewareJWT.js")
 
 
 const corsOptions = {
@@ -23,6 +24,21 @@ const agendamento = require("./routes/agendamento.router.js")
 
 app.use(cors(corsOptions))
 
+app.use(function(request, response, next) {
+    const publicRoute =
+        request.method === "POST" &&
+        (/^\/v1\/materna\/doadora\/?$/.test(request.path) ||
+         request.path === "/v1/materna/doadora/login" ||
+         request.path === "/v1/materna/funcionario/login" ||
+         request.path === "/v1/materna/doadora/otp/verificar" ||
+         request.path === "/v1/materna/instituicao")
+
+    if (publicRoute) {
+        return next()
+    }
+
+    return authenticateJWT(request, response, next)
+})
 
 app.use("/v1/materna/doadora", doadoraRouter)
 app.use("/v1/materna/funcionario", funcionarioRouter )

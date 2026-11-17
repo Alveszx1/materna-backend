@@ -109,6 +109,22 @@ const selectByIdFuncionario = async function (id) {
     }
 }
 
+const selectByEmail = async function (email) {
+    try {
+        const sql = `
+            select id, nome, email, senha, id_instituicao
+            from tbl_funcionario
+            where email = ?
+            limit 1
+        `
+        const [resultado] = await knexConection.raw(sql, [email])
+        return resultado
+    } catch (error) {
+        console.error('Erro ao buscar funcionário por email:', error)
+        return false
+    }
+}
+
 const updateFuncionario = async function (funcionario) {
     try {
         let sql = `update tbl_funcionario set 
@@ -177,6 +193,7 @@ module.exports = {
     selectAllFuncionarios,
     selectFuncionariosByInstituicao,
     selectByIdFuncionario,
+    selectByEmail,
     updateFuncionario,
     deleteFuncionario
 }

@@ -10,12 +10,23 @@ const bodyParserJson = bodyParser.json()
 
 // Import da controller da doadora
 const controllerDoadora = require('../controller/doadora/controller_doadora.js')
-
 router.post('/', bodyParserJson, async function(request, response) {
     let dados = request.body
     let contentType = request.headers['content-type']
     let result = await controllerDoadora.inserirNovaDoadora(dados, contentType)
 
+    response.status(result.status_code)
+    response.json(result)
+})
+
+router.post('/login', bodyParserJson, async function(request, response) {
+    let result = await controllerDoadora.login(request.body, request.headers['content-type'])
+    response.status(result.status_code)
+    response.json(result)
+})
+
+router.get('/me', async function (request, response) {
+    let result = await controllerDoadora.buscarDoadoraById(request.user)
     response.status(result.status_code)
     response.json(result)
 })

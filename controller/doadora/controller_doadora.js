@@ -14,6 +14,7 @@ const coordenadas = require("../../service/coordenadasService.js")
 
 const bcrypt = require("bcrypt")
 const otpService = require("../../service/otpService.js")
+const { createJWT } = require("../../middleware/MiddlewareJWT.js")
 
 const validarDados = async function (doadora) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
@@ -108,6 +109,43 @@ const validarDadosOtp = async function (dados) {
 
     } else {
         return false
+    }
+}
+
+const login = async function (dados, contentType) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (String(contentType).toUpperCase() !== "APPLICATION/JSON" ||
+            !dados || !dados.email || !dados.senha) {
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const resultado = await doadoraDAO.selectByEmail(dados.email)
+        const doadora = resultado && resultado[0]
+        const senhaValida = doadora && await bcrypt.compare(dados.senha, doadora.senha)
+
+        if (!doadora || !senhaValida) {
+            return customMessage.ERROR_UNAUTHORIZED
+        }
+
+        const token = await createJWT(doadora.id)
+
+        customMessage.DEFAULT_MESSAGE.status = true
+        customMessage.DEFAULT_MESSAGE.status_code = 200
+        customMessage.DEFAULT_MESSAGE.response = {
+            token,
+            doadora: {
+                id: doadora.id,
+                nome: doadora.nome,
+                email: doadora.email,
+                is_validado: doadora.is_validado
+            }
+        }
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
     }
 }
 
@@ -390,6 +428,7 @@ const verificarOtp = async function (dados, contentType) {
                                 } else {
                                     return customMessage.ERROR_INTERNAL_SERVER_MODEL
                                 }
+
                             }
 
                         } else {
@@ -460,5 +499,6 @@ module.exports = {
     verificarOtp,
     buscarDoadoraById,
     buscarNomeDoadora,
-    excluirDoadora
+    excluirDoadora,
+    login
 }

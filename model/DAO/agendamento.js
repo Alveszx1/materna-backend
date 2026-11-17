@@ -60,7 +60,7 @@ const updateAgendamento = async function (idAgendamento, idStatus, idDoadora = n
     }
 }
 
-const selectAllAgendamentos = async function () {
+const selectAllAgendamentos = async function (idInstituicao = null) {
     try {
 
         const sql = `
@@ -123,10 +123,14 @@ const selectAllAgendamentos = async function () {
             INNER JOIN tbl_status_agendamento AS sa
                 ON ag.id_status_agendamento = sa.id
 
+            ${idInstituicao === null ? "" : "WHERE j.id_instituicao = ?"}
             ORDER BY ch.dia ASC, ch.horario ASC;
         `;
 
-        const [resultado] = await knexConection.raw(sql);
+        const [resultado] = await knexConection.raw(
+            sql,
+            idInstituicao === null ? [] : [idInstituicao]
+        );
 
         return resultado;
 

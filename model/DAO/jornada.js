@@ -66,20 +66,20 @@ const selectJornadasPorInstituicao = async function (idInstituicao) {
     }
 }
 
-const updateStatusJornada = async function (id, isAtivo) {
+const updateStatusJornada = async function (id, isAtivo, idInstituicao) {
     try {
         let sql = `
             UPDATE tbl_jornada
             SET is_ativo = ?
-            WHERE id = ?
+            WHERE id = ? AND id_instituicao = ?
         `
 
-        const [resultado] = await knexConection.raw(sql, [isAtivo, id])
+        const [resultado] = await knexConection.raw(sql, [isAtivo, id, idInstituicao])
 
         if (resultado.affectedRows === 0) {
             const [jornadas] = await knexConection.raw(
-                'SELECT id FROM tbl_jornada WHERE id = ?',
-                [id]
+                'SELECT id FROM tbl_jornada WHERE id = ? AND id_instituicao = ?',
+                [id, idInstituicao]
             )
 
             return jornadas.length > 0 ? true : false

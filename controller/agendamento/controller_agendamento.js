@@ -192,6 +192,39 @@ const listarAgendamentos = async function () {
     }
 }
 
+const listarAgendamentosPorInstituicao = async function (idInstituicao) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        idInstituicao = Number(idInstituicao)
+
+        if (!Number.isInteger(idInstituicao) || idInstituicao <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_INSTITUICAO] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await agendamentoDAO.selectAllAgendamentos(idInstituicao)
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_AGENDAMENTO
+        }
+
+        if (result.length === 0) {
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+        customMessage.DEFAULT_MESSAGE.count = result.length
+        customMessage.DEFAULT_MESSAGE.response.agendamento = result
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const listarAgendamentosPorDoadora = async function (idDoadora) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
@@ -229,5 +262,6 @@ module.exports = {
     inserirNovoAgendamento,
     atualizarAgendamento,
     listarAgendamentos,
+    listarAgendamentosPorInstituicao,
     listarAgendamentosPorDoadora
 }

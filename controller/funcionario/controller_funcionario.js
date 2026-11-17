@@ -10,6 +10,7 @@ const configMessages = require("../module/configMessage.js")
 const funcionarioDAO = require("../../model/DAO/funcionario.js")
 
 const bycript = require("bcrypt")
+const { createJWT } = require("../../middleware/MiddlewareJWT.js")
 
 
 // const doadoraDAO = require("../../model/DAO/doadora.js")
@@ -129,7 +130,36 @@ const insertFuncionario = async function(funcionario, contentType){
     
 }
 
+const login = async function (dados, contentType) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
 
+    try {
+        if (String(contentType).toUpperCase() != "APPLICATION/JSON" ||
+            !dados || !dados.email || !dados.senha) {
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const resultado = await funcionarioDAO.selectByEmail(dados.email)
+        const funcionario = resultado && resultado[0]
+
+        if (!funcionario || !(await bycript.compare(dados.senha, funcionario.senha))) {
+            return customMessage.ERROR_UNAUTHORIZED
+        }
+
+        const token = await createJWT({
+            id: funcionario.id,
+            id_instituicao: funcionario.id_instituicao
+        })
+
+        customMessage.DEFAULT_MESSAGE.status = true
+        customMessage.DEFAULT_MESSAGE.status_code = 200
+        customMessage.DEFAULT_MESSAGE.response = { token }
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
 
 const listarFuncionario = async function () {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
@@ -330,5 +360,6 @@ module.exports = {
     buscarFuncionarioPorInstituicao,
     buscarFuncionarioById,
     atualizarFuncionario,
-    deletarFuncionario
+    deletarFuncionario,
+    login
 }

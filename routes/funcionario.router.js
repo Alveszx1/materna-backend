@@ -11,8 +11,17 @@ const bodyParserJson = bodyParser.json()
 // Import da controller da doadora
 const controllerFuncionario = require('../controller/funcionario/controller_funcionario.js')
 
+router.post('/login', bodyParserJson, async function(request, response) {
+    let result = await controllerFuncionario.login(request.body, request.headers['content-type'])
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.post('/', bodyParserJson, async function(request, response) {
-    let dados = request.body
+    let dados = {
+        ...request.body,
+        id_instituicao: request.instituicao
+    }
     let contentType = request.headers['content-type']
     let result = await controllerFuncionario.insertFuncionario(dados, contentType)
 
@@ -21,15 +30,21 @@ router.post('/', bodyParserJson, async function(request, response) {
 })
 
 router.get('/', async function (request, response) {
-    let result = await controllerFuncionario.listarFuncionario()
+    let result = await controllerFuncionario.buscarFuncionarioPorInstituicao(request.instituicao)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
+router.get('/instituicao/me', async function (request, response) {
+    let result = await controllerFuncionario.buscarFuncionarioPorInstituicao(request.instituicao)
 
     response.status(result.status_code)
     response.json(result)
 })
 
 router.get('/instituicao/:id', async function (request, response) {
-    let idInstituicao = request.params.id
-    let result = await controllerFuncionario.buscarFuncionarioPorInstituicao(idInstituicao)
+    let result = await controllerFuncionario.buscarFuncionarioPorInstituicao(request.instituicao)
 
     response.status(result.status_code)
     response.json(result)

@@ -25,16 +25,24 @@ router.post('/', bodyParserJson, async function(request, response) {
 // Listar todos os horários
 router.get('/', async function(request, response) {
 
-    let result = await controllerHorario.listarHorario()
+    let result = await controllerHorario.buscarHorarioPorInstituicao(request.instituicao)
 
     response.status(result.status_code)
     response.json(result)
 })
 
 // Listar os horários de uma instituição
+router.get('/instituicao/me', async function(request, response) {
+
+    let result = await controllerHorario.buscarHorarioPorInstituicao(request.instituicao)
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.get('/instituicao/:id', async function(request, response) {
 
-    let idInstituicao = request.params.id
+    let idInstituicao = request.instituicao
     let result = await controllerHorario.buscarHorarioPorInstituicao(idInstituicao)
 
     response.status(result.status_code)
@@ -44,7 +52,10 @@ router.get('/instituicao/:id', async function(request, response) {
 // Listar os horários da agenda
 router.get('/agenda', async function(request, response) {
 
-    let result = await controllerHorario.listarHorariosAgenda(request.query)
+    let result = await controllerHorario.listarHorariosAgenda({
+        ...request.query,
+        id_instituicao: request.instituicao
+    })
 
     response.status(result.status_code)
     response.json(result)

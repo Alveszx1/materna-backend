@@ -12,7 +12,11 @@ const bodyParserJson = bodyParser.json()
 const controllerCampanha = require('../controller/campanha/controller_campanha.js')
 
 router.post('/', bodyParserJson, async function(request, response) {
-    let dados = request.body
+    let dados = {
+        ...request.body,
+        id_instituicao: request.instituicao,
+        id_funcionario: request.user
+    }
     let contentType = request.headers['content-type']
     let result = await controllerCampanha.inserirNovaCampanha(dados, contentType)
 
@@ -38,7 +42,11 @@ router.get('/:id', async function (request, response) {
 
 router.put('/:id', bodyParserJson, async function (request, response) {
     let id = request.params.id
-    let dados = request.body
+    let dados = {
+        ...request.body,
+        id_instituicao: request.instituicao,
+        id_funcionario: request.user
+    }
     let contentType = request.headers['content-type']
     let result = await controllerCampanha.atualizarCampanha(dados, id, contentType)
 

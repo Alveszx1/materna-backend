@@ -9,10 +9,14 @@ const bodyParser = require('body-parser')
 const bodyParserJson = bodyParser.json()
 
 const controllerAgendamento = require('../controller/agendamento/controller_agendamento.js')
+router.get('/doadora/me', async function (request, response) {
+    let result = await controllerAgendamento.listarAgendamentosPorDoadora(request.user)
+    response.status(result.status_code)
+    response.json(result)
+})
 
-router.get('/doadora/:id', async function (request, response) {
-    let result = await controllerAgendamento.listarAgendamentosPorDoadora(request.params.id)
-
+router.get('/instituicao/me', async function (request, response) {
+    let result = await controllerAgendamento.listarAgendamentosPorInstituicao(request.instituicao)
     response.status(result.status_code)
     response.json(result)
 })

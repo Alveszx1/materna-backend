@@ -90,6 +90,23 @@ const selectByIdDoadora = async function (id) {
     }
 };
 
+const selectByEmail = async function (email) {
+    try {
+        const sql = `
+            select id, nome, email, senha, sal, is_validado
+            from tbl_doadora
+            where email = ?
+            limit 1
+        `;
+
+        const [resultado] = await knexConection.raw(sql, [email]);
+        return resultado;
+    } catch (error) {
+        console.error('Erro ao buscar doadora por email:', error);
+        return false;
+    }
+};
+
 const updateDoadora = async function (doadora) {
     try {
         const sql = `
@@ -182,6 +199,7 @@ const validarDoadoraOtp = async function (id_doadora) {
 module.exports = {
     insertDoadora,
     selectByIdDoadora,
+    selectByEmail,
     updateDoadora,
     deleteDoadora,
     selectUltimoCodigoByDoadora,

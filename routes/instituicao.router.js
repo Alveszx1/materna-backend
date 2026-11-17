@@ -11,15 +11,21 @@ const bodyParserJson = bodyParser.json()
 // Import da controller da doadora
 const controllerInstituicao = require('../controller/instituicao/controller_instituicao.js')
 
+router.get('/me', async function(request, response) {
+    let result = await controllerInstituicao.buscarInstituicaoById(request.instituicao)
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.get('/', async function(request, response) {
-    let result = await controllerInstituicao.listarInstituicao()
+    let result = await controllerInstituicao.buscarInstituicaoById(request.instituicao)
 
     response.status(result.status_code)
     response.json(result)
 })
 
 router.put('/:id', bodyParserJson, async function(request, response) {
-    let id = request.params.id
+    let id = request.instituicao
     let dados = request.body
     let contentType = request.headers['content-type']
     let result = await controllerInstituicao.atualizarInstituicao(dados, id, contentType)
@@ -39,14 +45,14 @@ router.get("/proximas", async function (request, response) {
 })
 
 router.get('/:id/doadoras', async function(request, response) {
-    let result = await controllerInstituicao.listarDoadorasPorInstituicao(request.params.id)
+    let result = await controllerInstituicao.listarDoadorasPorInstituicao(request.instituicao)
 
     response.status(result.status_code)
     response.json(result)
 })
 
 router.get('/:id', async function(request, response) {
-    let id = request.params.id
+    let id = request.instituicao
     let result = await controllerInstituicao.buscarInstituicaoById(id)
 
     response.status(result.status_code)

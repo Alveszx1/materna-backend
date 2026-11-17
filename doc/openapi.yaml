@@ -15,6 +15,8 @@ externalDocs:
   url: http://swagger.io
 servers:
 - url: http://localhost:9090
+security:
+- bearerAuth: []
 paths:
   /v1/materna/doadora:
     post:
@@ -22,6 +24,7 @@ paths:
       - Doadora
       summary: Adiciona uma nova doadora
       description: Endpoint para enviar os dados de uma doadora a ser cadastrada
+      security: []
       requestBody:
         description: JSON contendo os dados de uma doadora
         required: true
@@ -56,6 +59,103 @@ paths:
           description: Not Found
         '500':
           description: Error Internal Server (Controller / Model)
+  /v1/materna/jornada/doadora/me:
+    get:
+      tags:
+      - Jornada
+      summary: Lista as jornadas da doadora autenticada
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          description: Token ausente ou inválido
+  /v1/materna/jornada/instituicao/me:
+    get:
+      tags:
+      - Jornada
+      summary: Lista as jornadas da instituição autenticada
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          description: Token ausente ou inválido
+  /v1/materna/doadora/login:
+    post:
+      tags:
+      - Doadora
+      summary: Autentica uma doadora
+      description: Retorna um token JWT para a doadora.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - senha
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: maria@email.com
+                senha:
+                  type: string
+                  format: password
+                  example: '123456'
+      responses:
+        '200':
+          description: Login realizado com sucesso
+        '401':
+          description: E-mail ou senha inválidos
+        '415':
+          description: Invalid Content-Type
+  /v1/materna/doadora/me:
+    get:
+      tags:
+      - Doadora
+      summary: Busca a doadora autenticada
+      description: Retorna os dados da doadora identificada pelo token JWT.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doadora'
+        '401':
+          description: Token ausente ou inválido
+  /v1/materna/doadora/otp/verificar:
+    post:
+      tags:
+      - Doadora
+      summary: Valida o código OTP da doadora
+      description: Confirma o código enviado para validar o cadastro da doadora.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - id_doadora
+              - codigo
+              properties:
+                id_doadora:
+                  type: integer
+                  example: 1
+                codigo:
+                  type: integer
+                  example: 123456
+      responses:
+        '200':
+          description: Conta validada com sucesso
+        '400':
+          description: Código inválido ou dados inválidos
+        '415':
+          description: Invalid Content-Type
   /v1/materna/doadora/{id}:
     get:
       tags:
@@ -405,6 +505,7 @@ paths:
       - Instituição
       summary: Adiciona uma nova instituição
       description: Endpoint para enviar os dados de uma instituição a ser cadastrada
+      security: []
       requestBody:
         description: JSON contendo os dados de uma instituição
         required: true
@@ -1229,6 +1330,16 @@ paths:
           description: Dados não encontrados
         '500':
           description: Error Internal Server
+  /v1/materna/vinculo-etapa-doadora/doadora/me:
+    get:
+      tags:
+      - Vínculo Etapa Doadora
+      summary: Lista as jornadas da doadora autenticada
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          description: Token ausente ou inválido
   /v1/materna/agenda/resumo:
     get:
       tags:
@@ -1917,6 +2028,19 @@ paths:
           description: Invalid Content-Type
         '500':
           description: Error Internal Server (Controller / Model)
+  /v1/materna/agendamento/instituicao/me:
+    get:
+      tags:
+      - Agendamento
+      summary: Lista os agendamentos da instituição autenticada
+      description: Retorna somente os agendamentos vinculados à instituição do token JWT.
+      responses:
+        '200':
+          description: Agendamentos encontrados
+        '401':
+          description: Token ausente ou inválido
+        '404':
+          description: Nenhum agendamento encontrado
     get:
       tags:
       - Agendamento
@@ -2358,7 +2482,90 @@ paths:
           description: Nenhuma doação realizada encontrada
         '500':
           description: Error Internal Server
+  /v1/materna/funcionario/instituicao/me:
+    get:
+      tags:
+      - Funcionário
+      summary: Lista os funcionários da instituição autenticada
+      description: Retorna os funcionários da instituição vinculada ao token JWT.
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          description: Token ausente ou inválido
+  /v1/materna/funcionario/login:
+    post:
+      tags:
+      - Funcionário
+      summary: Autentica um funcionário
+      description: Retorna um token JWT para o funcionário.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - senha
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: funcionario@email.com
+                senha:
+                  type: string
+                  format: password
+                  example: '123456'
+      responses:
+        '200':
+          description: Login realizado com sucesso
+        '401':
+          description: E-mail ou senha inválidos
+        '415':
+          description: Invalid Content-Type
+  /v1/materna/instituicao/me:
+    get:
+      tags:
+      - Instituição
+      summary: Busca a instituição autenticada
+      description: Retorna a instituição identificada pelo token JWT.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Instituicao'
+        '401':
+          description: Token ausente ou inválido
+  /v1/materna/horario/instituicao/me:
+    get:
+      tags:
+      - Horário
+      summary: Lista os horários da instituição autenticada
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          description: Token ausente ou inválido
+  /v1/materna/agendamento/doadora/me:
+    get:
+      tags:
+      - Agendamento
+      summary: Lista os agendamentos da doadora autenticada
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          description: Token ausente ou inválido
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     Doadora:
       type: object
