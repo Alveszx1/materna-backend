@@ -26,12 +26,14 @@ app.use(cors(corsOptions))
 
 app.use(function(request, response, next) {
     const publicRoute =
-        request.method === "POST" &&
+        (request.method === "POST" &&
         (/^\/v1\/materna\/doadora\/?$/.test(request.path) ||
          request.path === "/v1/materna/doadora/login" ||
          request.path === "/v1/materna/funcionario/login" ||
          request.path === "/v1/materna/doadora/otp/verificar" ||
-         request.path === "/v1/materna/instituicao")
+         request.path === "/v1/materna/instituicao")) ||
+        (request.method === "PATCH" &&
+         request.path === "/v1/materna/doadora/senha")
 
     if (publicRoute) {
         return next()

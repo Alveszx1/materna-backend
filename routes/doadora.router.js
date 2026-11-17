@@ -31,6 +31,16 @@ router.get('/me', async function (request, response) {
     response.json(result)
 })
 
+router.patch('/me', bodyParserJson, async function (request, response) {
+    let result = await controllerDoadora.atualizarFotoDoadora(
+        request.user,
+        request.body,
+        request.headers['content-type']
+    )
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.get('/:id', async function (request, response) {
     let id = request.params.id
     let result = await controllerDoadora.buscarDoadoraById(id)
@@ -45,6 +55,15 @@ router.post('/otp/verificar', bodyParserJson, async function (request, response)
     let contentType = request.headers['content-type']
     let result = await controllerDoadora.verificarOtp(dados, contentType)
 
+    response.status(result.status_code)
+    response.json(result)
+})
+
+router.patch('/senha', bodyParserJson, async function (request, response) {
+    let result = await controllerDoadora.atualizarSenhaPorEmail(
+        request.body,
+        request.headers['content-type']
+    )
     response.status(result.status_code)
     response.json(result)
 })

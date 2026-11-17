@@ -126,6 +126,33 @@ paths:
                 $ref: '#/components/schemas/Doadora'
         '401':
           description: Token ausente ou inválido
+    patch:
+      tags:
+      - Doadora
+      summary: Atualiza a foto da doadora autenticada
+      description: Atualiza a foto usando o ID da doadora presente no token JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - foto
+              properties:
+                foto:
+                  type: string
+                  maxLength: 255
+                  example: https://exemplo.com/foto.jpg
+      responses:
+        '200':
+          description: Foto atualizada com sucesso
+        '400':
+          description: Foto inválida
+        '401':
+          description: Token ausente ou inválido
+        '415':
+          description: Invalid Content-Type
   /v1/materna/doadora/otp/verificar:
     post:
       tags:
@@ -154,6 +181,41 @@ paths:
           description: Conta validada com sucesso
         '400':
           description: Código inválido ou dados inválidos
+        '415':
+          description: Invalid Content-Type
+  /v1/materna/doadora/senha:
+    patch:
+      tags:
+      - Doadora
+      summary: Atualiza a senha da doadora
+      description: Atualiza a senha usando apenas o e-mail da doadora. Esta rota é pública.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - senha
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: maria@email.com
+                senha:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: '123456'
+      responses:
+        '200':
+          description: Senha atualizada com sucesso
+        '400':
+          description: E-mail ou senha inválidos
+        '404':
+          description: Doadora não encontrada
         '415':
           description: Invalid Content-Type
   /v1/materna/doadora/{id}:
@@ -925,7 +987,7 @@ paths:
       tags:
       - Jornada
       summary: Deletar uma jornada existente
-      description: Excluir uma jornada
+      description: Exclui a jornada somente quando não existem vínculos com doadoras.
       parameters:
       - name: id
         in: path
@@ -941,6 +1003,8 @@ paths:
           description: Invalid ID supplied
         '404':
           description: Jornada not found
+        '409':
+          description: A jornada possui vínculo com uma doadora
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/etapa:

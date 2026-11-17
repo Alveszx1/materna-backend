@@ -333,6 +333,51 @@ const atualizarStatusJornada = async function (id, dados, contentType, idInstitu
     }
 }
 
+const deletarJornada = async function (id, idInstituicao) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        id = Number(id)
+        idInstituicao = Number(idInstituicao)
+
+        if (!Number.isInteger(id) || id <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        if (!Number.isInteger(idInstituicao) || idInstituicao <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_INSTITUICAO] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await jornadaDAO.deleteJornada(id, idInstituicao)
+
+        if (result && result.conflito) {
+            customMessage.ERROR_CONFLICT.field =
+                "[JORNADA] POSSUI VÍNCULO COM DOADORA"
+            return customMessage.ERROR_CONFLICT
+        }
+
+        if (result === null) {
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_JORNADA
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_DELETED_ITEM.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_DELETED_ITEM.status_code
+        customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_DELETED_ITEM.message
+        customMessage.DEFAULT_MESSAGE.response = result
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const tratarDados = async function (jornada) {
 
     jornada.nome = jornada.nome.replaceAll("'", "")
@@ -352,5 +397,6 @@ module.exports = {
     inserirNovaJornada,
     listarJornadasPorInstituicao,
     buscarJornadaDoadora,
-    atualizarStatusJornada
+    atualizarStatusJornada,
+    deletarJornada
 }

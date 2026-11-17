@@ -148,6 +148,38 @@ const updateDoadora = async function (doadora) {
     }
 };
 
+const updateFotoDoadora = async function (id, foto) {
+    try {
+        const sql = `
+            UPDATE tbl_doadora
+            SET foto = ?
+            WHERE id = ?
+        `;
+
+        await knexConection.raw(sql, [foto, id]);
+        return true;
+    } catch (error) {
+        console.error('Erro ao atualizar foto da doadora:', error);
+        return false;
+    }
+};
+
+const updateSenhaPorEmail = async function (email, senha, sal) {
+    try {
+        const sql = `
+            UPDATE tbl_doadora
+            SET senha = ?, sal = ?
+            WHERE email = ?
+        `;
+
+        await knexConection.raw(sql, [senha, sal, email]);
+        return true;
+    } catch (error) {
+        console.error('Erro ao atualizar senha da doadora:', error);
+        return false;
+    }
+};
+
 const deleteDoadora = async function(id){
     try {
         let sql = `DELETE FROM tbl_doadora WHERE id=${id};`
@@ -201,6 +233,8 @@ module.exports = {
     selectByIdDoadora,
     selectByEmail,
     updateDoadora,
+    updateFotoDoadora,
+    updateSenhaPorEmail,
     deleteDoadora,
     selectUltimoCodigoByDoadora,
     validarDoadoraOtp

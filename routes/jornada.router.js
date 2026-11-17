@@ -46,6 +46,16 @@ router.patch('/:id', bodyParserJson, async function(request, response) {
     response.json(result)
 })
 
+router.delete('/:id', async function(request, response) {
+    let result = await controllerJornada.deletarJornada(
+        request.params.id,
+        request.instituicao
+    )
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.post('/',bodyParserJson, async function(request, response) {
 
     let dados = {

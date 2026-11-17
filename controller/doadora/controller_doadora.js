@@ -149,6 +149,52 @@ const login = async function (dados, contentType) {
     }
 }
 
+const atualizarSenhaPorEmail = async function (dados, contentType) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (String(contentType).toUpperCase() != "APPLICATION/JSON") {
+            return customMessage.ERROR_CONTENT_TYPE
+        }
+
+        if (dados == undefined || dados == null ||
+            typeof dados.email != "string" ||
+            dados.email.trim() == "" ||
+            typeof dados.senha != "string" ||
+            dados.senha.length < 6) {
+            customMessage.ERROR_BAD_REQUEST.field =
+                "[EMAIL] E [SENHA] INVÁLIDOS"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const resultado = await doadoraDAO.selectByEmail(dados.email)
+
+        if (!resultado || resultado.length == 0) {
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        const sal = await bcrypt.genSalt(10)
+        const senha = await bcrypt.hash(dados.senha, sal)
+        const result = await doadoraDAO.updateSenhaPorEmail(dados.email, senha, sal)
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_DOADORA
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+        customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_UPDATE_ITEM.message
+        customMessage.DEFAULT_MESSAGE.response = {
+            email: dados.email
+        }
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const inserirNovaDoadora = async function (doadora, contentType) {
 
     let customMessage = JSON.parse(JSON.stringify(configMessages))
@@ -299,6 +345,47 @@ const atualizarDoadora = async function (doadora, id, contentType) {
         }
     } catch (error) {
         console.log(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
+const atualizarFotoDoadora = async function (id, dados, contentType) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        if (String(contentType).toUpperCase() != "APPLICATION/JSON") {
+            return customMessage.ERROR_CONTENT_TYPE
+        }
+
+        id = Number(id)
+
+        if (!Number.isInteger(id) || id <= 0) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        if (dados == undefined || dados == null ||
+            typeof dados.foto != "string" ||
+            dados.foto.length == 0 ||
+            dados.foto.length > 255) {
+            customMessage.ERROR_BAD_REQUEST.field = "[FOTO] INVÁLIDA (obrigatória, até 255 caracteres)"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        let result = await doadoraDAO.updateFotoDoadora(id, dados.foto)
+
+        if (!result) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_UPDATE_ITEM.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_UPDATE_ITEM.status_code
+        customMessage.DEFAULT_MESSAGE.message = customMessage.SUCCESS_UPDATE_ITEM.message
+        customMessage.DEFAULT_MESSAGE.response = { id, foto: dados.foto }
+
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
         return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
     }
 }
@@ -497,6 +584,8 @@ module.exports = {
     atualizarDoadora,
     listarDoadora,
     verificarOtp,
+    atualizarFotoDoadora,
+    atualizarSenhaPorEmail,
     buscarDoadoraById,
     buscarNomeDoadora,
     excluirDoadora,
