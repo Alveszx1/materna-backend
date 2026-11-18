@@ -67,28 +67,100 @@ const knexConection = knex(knexDatabaseConfig.development);
         
     };
 
-const selectByIdDoadora = async function (id) {
-    try {
-        const sql = `
-            select doad.*, ender.logradouro, ender.cep, ender.bairro, ender.numero,
-                   ender.complemento, ender.latitude, ender.longitude,
-                   cid.nome as cidade, est.sigla as sigla_estado,
-                   tel.numero as telefone
-            from tbl_doadora as doad
-            inner join tbl_endereco as ender on doad.id_endereco = ender.id
-            inner join tbl_cidade as cid on ender.id_cidade = cid.id
-            inner join tbl_estado as est on cid.id_estado = est.id
-            inner join tbl_telefone as tel on doad.id_telefone = tel.id
-            where doad.id = ?
-        `;
 
-        const [resultado] = await knexConection.raw(sql, [id]);
-        return resultado;
-    } catch (error) {
-        console.error('Erro ao buscar doadora:', error);
-        return false;
-    }
-};
+    const selectByIdDoadora = async function (id) {
+        try {
+            const sql = `
+                SELECT 
+                    doad.*,
+                    ender.logradouro,
+                    ender.cep,
+                    ender.bairro,
+                    ender.numero,
+                    ender.complemento,
+                    ender.latitude,
+                    ender.longitude,
+                    cid.nome AS cidade,
+                    est.sigla AS sigla_estado,
+                    tel.numero AS telefone,
+    
+                    -- ETAPAS CONCLUIDAS
+                    (
+                        SELECT COUNT(DISTINCT jd.id_etapa)
+                        FROM tbl_jornada_doacao AS jd
+                        WHERE jd.id_doadora = doad.id
+                        AND jd.id_jornada = (
+                            SELECT jd2.id_jornada
+                            FROM tbl_jornada_doacao AS jd2
+                            WHERE jd2.id_doadora = doad.id
+                            AND jd2.encerrado = false
+                            ORDER BY jd2.id DESC
+                            LIMIT 1
+                        )
+                        AND jd.data_conclusao IS NOT NULL
+                    ) AS etapas_concluidas,
+    
+                    -- TOTAL DE ETAPAS
+                    (
+                        SELECT COUNT(*)
+                        FROM tbl_etapa AS et
+                        WHERE et.id_jornada = (
+                            SELECT jd2.id_jornada
+                            FROM tbl_jornada_doacao AS jd2
+                            WHERE jd2.id_doadora = doad.id
+                            AND jd2.encerrado = false
+                            ORDER BY jd2.id DESC
+                            LIMIT 1
+                        )
+                    ) AS total_etapas,
+    
+                    -- DOACOES REALIZADAS
+                    (
+                        SELECT COUNT(DISTINCT jd.ciclo)
+                        FROM tbl_jornada_doacao AS jd
+                        INNER JOIN tbl_etapa AS et
+                            ON jd.id_etapa = et.id
+                        WHERE jd.id_doadora = doad.id
+                        AND jd.data_conclusao IS NOT NULL
+                        AND et.is_repetivel = true
+                    ) AS doacoes_realizadas,
+    
+                    -- AGENDAMENTOS
+                    (
+                        SELECT COUNT(DISTINCT ag.id)
+                        FROM tbl_agendamento AS ag
+                        INNER JOIN tbl_jornada_doacao AS jd
+                            ON ag.id_jornada_doacao = jd.id
+                        WHERE jd.id_doadora = doad.id
+                    ) AS total_agendamentos
+    
+                FROM tbl_doadora AS doad
+    
+                INNER JOIN tbl_endereco AS ender
+                    ON doad.id_endereco = ender.id
+    
+                INNER JOIN tbl_cidade AS cid
+                    ON ender.id_cidade = cid.id
+    
+                INNER JOIN tbl_estado AS est
+                    ON cid.id_estado = est.id
+    
+                INNER JOIN tbl_telefone AS tel
+                    ON doad.id_telefone = tel.id
+    
+                WHERE doad.id = ?
+            `;
+    
+            const [resultado] = await knexConection.raw(sql, [id]);
+    
+            return resultado;
+    
+        } catch (error) {
+            console.error('Erro ao buscar doadora:', error);
+            return false;
+        }
+    };
+    
 
 const selectByEmail = async function (email) {
     try {
