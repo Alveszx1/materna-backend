@@ -25,7 +25,10 @@ const agendamento = require("./routes/agendamento.router.js")
 app.use(cors(corsOptions))
 
 app.use(function(request, response, next) {
+    const originalPath = request.originalUrl.split("?")[0]
     const publicRoute =
+        (request.method === "GET" &&
+         /^\/v1\/materna\/instituicao(?:\/\d+)?\/?$/.test(originalPath)) ||
         (request.method === "POST" &&
         (/^\/v1\/materna\/doadora\/?$/.test(request.path) ||
          request.path === "/v1/materna/doadora/login" ||

@@ -18,7 +18,7 @@ router.get('/me', async function(request, response) {
 })
 
 router.get('/', async function(request, response) {
-    let result = await controllerInstituicao.buscarInstituicaoById(request.instituicao)
+    let result = await controllerInstituicao.listarInstituicao()
 
     response.status(result.status_code)
     response.json(result)
@@ -52,7 +52,7 @@ router.get('/:id/doadoras', async function(request, response) {
 })
 
 router.get('/:id', async function(request, response) {
-    let id = request.instituicao
+    let id = request.params.id
     let result = await controllerInstituicao.buscarInstituicaoById(id)
 
     response.status(result.status_code)

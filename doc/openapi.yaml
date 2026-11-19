@@ -562,6 +562,25 @@ paths:
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/instituicao:
+    get:
+      tags:
+      - Instituição
+      summary: Lista todas as instituições
+      description: Listagem pública de todas as instituições registradas no sistema
+      security: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Instituicao'
+        '404':
+          description: Not Found
+        '500':
+          description: Error Internal Server (Controller / Model)
     post:
       tags:
       - Instituição
@@ -584,30 +603,13 @@ paths:
           description: Invalid Content-Type
         '500':
           description: Error Internal Server (Controller / Model)
-    get:
-      tags:
-      - Instituição
-      summary: Lista todas as instituições
-      description: Listagem de todas as instituições registradas no sistema
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Instituicao'
-        '404':
-          description: Not Found
-        '500':
-          description: Error Internal Server (Controller / Model)
   /v1/materna/instituicao/{id}:
     get:
       tags:
       - Instituição
       summary: Busca uma instituição pela ID
       description: Retorna os dados da instituição, suas jornadas e todas as informações das etapas de cada jornada
+      security: []
       parameters:
       - name: id
         in: path
@@ -2040,6 +2042,22 @@ paths:
         '500':
           description: Error Internal Server (Controller / Model)
   /v1/materna/agendamento:
+    get:
+      tags:
+      - Agendamento
+      summary: Lista os atendimentos da agenda
+      description: Retorna todos os agendamentos com horário, doadora, etapa e status
+      responses:
+        '200':
+          description: Atendimentos encontrados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgendamentosResponse'
+        '404':
+          description: Nenhum atendimento encontrado
+        '500':
+          description: Error Internal Server (Controller / Model)
     post:
       tags:
       - Agendamento
@@ -2105,22 +2123,6 @@ paths:
           description: Token ausente ou inválido
         '404':
           description: Nenhum agendamento encontrado
-    get:
-      tags:
-      - Agendamento
-      summary: Lista os atendimentos da agenda
-      description: Retorna todos os agendamentos com horário, doadora, etapa e status
-      responses:
-        '200':
-          description: Atendimentos encontrados
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AgendamentosResponse'
-        '404':
-          description: Nenhum atendimento encontrado
-        '500':
-          description: Error Internal Server (Controller / Model)
   /v1/materna/agendamento/doadora/{id}:
     get:
       tags:
