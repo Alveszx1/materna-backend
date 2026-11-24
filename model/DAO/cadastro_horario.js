@@ -167,7 +167,7 @@ const selectHorariosAgenda = async function (filtros) {
             condicoes.push("id_doadora IS NULL")
 
         if (filtros.id_instituicao !== undefined) {
-            condicoes.push("id_instituicao = ?")
+            condicoes.push("id_jornada IN (SELECT id FROM tbl_jornada WHERE id_instituicao = ?)")
             valores.push(Number(filtros.id_instituicao))
         }
 
@@ -185,6 +185,7 @@ const selectHorariosAgenda = async function (filtros) {
             return false
 
     } catch (error) {
+        console.error('Erro ao buscar horários da agenda:', error)
         return false
     }
 }

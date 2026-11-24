@@ -42,7 +42,7 @@ router.get('/instituicao/me', async function(request, response) {
 
 router.get('/instituicao/:id', async function(request, response) {
 
-    let idInstituicao = request.instituicao
+    let idInstituicao = request.params.id
     let result = await controllerHorario.buscarHorarioPorInstituicao(idInstituicao)
 
     response.status(result.status_code)

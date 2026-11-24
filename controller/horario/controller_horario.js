@@ -88,7 +88,7 @@ const inserirHorario = async function (horario, contentType) {
                     return customMessage.DEFAULT_MESSAGE
 
                 } else {
-                    return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+                    return customMessage.ERROR_INTERNAL_SERVER_MODEL_CADASTRO_HORARIO
                 }
 
             } else {
@@ -127,7 +127,7 @@ const listarHorario = async function () {
                 return customMessage.ERROR_NOT_FOUND
             }
         } else {
-            return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_CADASTRO_HORARIO
         }
     } catch (error) {
         console.log(error)
@@ -163,7 +163,7 @@ const listarHorariosAgenda = async function (filtros) {
                 return customMessage.ERROR_NOT_FOUND
             }
         } else {
-            return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_CADASTRO_HORARIO
         }
     } catch (error) {
         console.log(error)
@@ -195,7 +195,7 @@ const buscarHorarioById = async function (id) {
                     return customMessage.ERROR_NOT_FOUND
                 }
             } else {
-                return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+                return customMessage.ERROR_INTERNAL_SERVER_MODEL_CADASTRO_HORARIO
             }
         }
     } catch (error) {
@@ -229,7 +229,7 @@ const buscarHorarioPorEtapa = async function (idEtapa) {
             return customMessage.ERROR_NOT_FOUND
         }
 
-        return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+        return customMessage.ERROR_INTERNAL_SERVER_MODEL_CADASTRO_HORARIO
     } catch (error) {
         console.log(error)
         return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
@@ -265,7 +265,7 @@ const atualizarHorario = async function (horario, id, contentType) {
 
                         return customMessage.DEFAULT_MESSAGE
                     } else {
-                        return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+                        return customMessage.ERROR_INTERNAL_SERVER_MODEL_CADASTRO_HORARIO
                     }
                 } else {
                     return validar
@@ -314,7 +314,7 @@ const buscarHorarioPorInstituicao = async function (idInstituicao) {
             return customMessage.ERROR_NOT_FOUND
         }
 
-        return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+        return customMessage.ERROR_INTERNAL_SERVER_MODEL_CADASTRO_HORARIO
 
     } catch (error) {
         console.log(error)
@@ -343,7 +343,7 @@ const deletarHorario = async function (id) {
 
                 return customMessage.DEFAULT_MESSAGE
             } else {
-                return customMessage.ERROR_INTERNAL_SERVER_MODEL_HORARIO
+                return customMessage.ERROR_INTERNAL_SERVER_MODEL_CADASTRO_HORARIO
             }
         } else {
             return resultBuscarHorario
