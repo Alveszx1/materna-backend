@@ -54,7 +54,7 @@ router.get('/agenda', async function(request, response) {
 
     let result = await controllerHorario.listarHorariosAgenda({
         ...request.query,
-        id_instituicao: request.instituicao
+        id_instituicao: request.query.id_instituicao ?? request.instituicao
     })
 
     response.status(result.status_code)

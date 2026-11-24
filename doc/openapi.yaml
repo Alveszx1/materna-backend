@@ -1489,7 +1489,7 @@ paths:
       parameters:
       - name: id_instituicao
         in: query
-        description: Filtra os horários pela instituição
+        description: Filtra os horários pela instituição informada; se omitido, usa a instituição do token
         required: false
         schema:
           type: integer
