@@ -1816,6 +1816,39 @@ paths:
           description: Invalid Content-Type
         '500':
           description: Error Internal Server (Controller / Model)
+  /v1/materna/documento/doadora/me:
+    get:
+      tags:
+      - Documento da Doadora
+      summary: Lista os documentos da doadora autenticada
+      description: Usa o ID da doadora presente no token JWT.
+      responses:
+        '200':
+          description: Documentos da doadora listados com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  status_code:
+                    type: integer
+                    example: 200
+                  count:
+                    type: integer
+                    example: 1
+                  response:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentoDoadora'
+        '400':
+          description: ID da doadora no token inválido
+        '404':
+          description: Nenhum documento encontrado para a doadora
+        '500':
+          description: Error Internal Server (Controller / Model)
   /v1/materna/documento/{id_jornada_doacao}:
     post:
       tags:
@@ -3346,6 +3379,12 @@ components:
         id_doadora:
           type: integer
           example: 1
+        id_status_documento:
+          type: integer
+          example: 1
+        status:
+          type: string
+          example: Pendente
         id_etapa:
           type: integer
           example: 2

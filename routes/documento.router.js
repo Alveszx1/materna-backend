@@ -4,6 +4,15 @@ const controllerDocumento = require('../controller/documento/controller_document
 const router = express.Router()
 const bodyParserJson = bodyParser.json()
 
+router.get('/doadora/me', async function(request, response) {
+    let result = await controllerDocumento.listarDocumentosPorDoadora(
+        request.user
+    )
+
+    response.status(result.status_code)
+    response.json(result)
+})
+
 router.post('/:id_jornada_doacao', bodyParserJson, async function(request, response) {
     let id = request.params.id_jornada_doacao
     let dados = request.body

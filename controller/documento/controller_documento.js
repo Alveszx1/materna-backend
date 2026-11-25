@@ -49,6 +49,35 @@ const validarDadosRecusa = async function (idDocumento, dados) {
     return false
 }
 
+const listarDocumentosPorDoadora = async function (idDoadora) {
+    let customMessage = JSON.parse(JSON.stringify(configMessages))
+
+    try {
+        idDoadora = Number(idDoadora)
+        if (!Number.isInteger(idDoadora) || idDoadora < 1) {
+            customMessage.ERROR_BAD_REQUEST.field = "[ID_DOADORA] INVÁLIDO"
+            return customMessage.ERROR_BAD_REQUEST
+        }
+
+        const result = await documentoDoadoraDAO.selectDocumentosByIdDoadora(idDoadora)
+        if (result === false) {
+            return customMessage.ERROR_INTERNAL_SERVER_MODEL_DOCUMENTO_DOADORA
+        }
+        if (result.length === 0) {
+            return customMessage.ERROR_NOT_FOUND
+        }
+
+        customMessage.DEFAULT_MESSAGE.status = customMessage.SUCCESS_RESPONSE.status
+        customMessage.DEFAULT_MESSAGE.status_code = customMessage.SUCCESS_RESPONSE.status_code
+        customMessage.DEFAULT_MESSAGE.count = result.length
+        customMessage.DEFAULT_MESSAGE.response = result
+        return customMessage.DEFAULT_MESSAGE
+    } catch (error) {
+        console.error(error)
+        return customMessage.ERROR_INTERNAL_SERVER_CONTROLLER
+    }
+}
+
 const enviarDocumento = async function (idJornadaDoacao, dados, contentType) {
     let customMessage = JSON.parse(JSON.stringify(configMessages))
 
@@ -169,6 +198,7 @@ const recusarDocumento = async function (idDocumento, dados, contentType) {
 }
 
 module.exports = {
+    listarDocumentosPorDoadora,
     enviarDocumento,
     aceitarDocumento,
     recusarDocumento

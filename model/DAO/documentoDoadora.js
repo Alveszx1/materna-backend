@@ -3,6 +3,32 @@ const knexDatabaseConfig = require("../database_config/knexConfig.js")
 
 const knexConection = knex(knexDatabaseConfig.development)
 
+const selectDocumentosByIdDoadora = async function (idDoadora) {
+    try {
+        const sql = `
+            SELECT
+                documento.id AS id_documento,
+                documento.documento,
+                documento.motivo_recusa,
+                documento.id_status_documento,
+                status.status,
+                documento.id_jornada_doacao,
+                documento.id_doadora
+            FROM tbl_documento_doadora AS documento
+            INNER JOIN tbl_status_documento_doadora AS status
+                ON status.id = documento.id_status_documento
+            WHERE documento.id_doadora = ?
+            ORDER BY documento.id DESC
+        `
+
+        const [result] = await knexConection.raw(sql, [idDoadora])
+        return result
+    } catch (error) {
+        console.error("Erro ao buscar documentos da doadora:", error)
+        return false
+    }
+}
+
 const insertDocumentoDoadora = async function (documentoDoadora) {
     try {
         const sql = `
@@ -85,6 +111,7 @@ const aceitarDocumentoDoadora = async function (idDocumento) {
 }
 
 module.exports = {
+    selectDocumentosByIdDoadora,
     insertDocumentoDoadora,
     recusarDocumentoDoadora,
     aceitarDocumentoDoadora
