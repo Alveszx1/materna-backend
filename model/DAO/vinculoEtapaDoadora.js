@@ -199,6 +199,21 @@ const selectJornadasAtivasPorDoadora = async function (idDoadora) {
                                                     'ciclo', vinculo.ciclo,
                                                     'data_conclusao', vinculo.data_conclusao,
                                                     'encerrado', vinculo.encerrado,
+                                                    'documentos', COALESCE((
+                                                        SELECT JSON_ARRAYAGG(
+                                                            JSON_OBJECT(
+                                                                'id', documento.id,
+                                                                'documento', documento.documento,
+                                                                'motivo_recusa', documento.motivo_recusa,
+                                                                'id_status_documento', documento.id_status_documento,
+                                                                'status', status_documento.status
+                                                            )
+                                                        )
+                                                        FROM tbl_documento_doadora AS documento
+                                                        INNER JOIN tbl_status_documento_doadora AS status_documento
+                                                            ON status_documento.id = documento.id_status_documento
+                                                        WHERE documento.id_jornada_doacao = vinculo.id
+                                                    ), JSON_ARRAY()),
                                                     'status', IF(
                                                         etapa.is_repetivel,
                                                         IF(vinculo.encerrado, 'concluida', 'em_andamento'),
